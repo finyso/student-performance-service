@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}Добавить оценку{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="bi bi-star"></i> Выставить оценку</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <p><strong><i class="bi bi-person"></i> Студент:</strong> {{ student.user.last_name }} {{ student.user.first_name }}</p>
+                    <p><strong><i class="bi bi-book"></i> Предмет:</strong> {{ subject.name }}</p>
+                    <p><strong><i class="bi bi-people"></i> Группа:</strong> {{ student.group.name|default:"—" }}</p>
+                </div>
+                
+                <hr>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Тип работы</label>
+                        <select name="grade_type" class="form-select" required>
+                            <option value="">Выберите тип</option>
+                            {% for value, label in grade_types %}
+                                <option value="{{ value }}" {% if request.GET.type == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Оценка</label>
+                        <select name="value" class="form-select" required>
+                            <option value="">Выберите оценку</option>
+                            {% for value, label in grade_values %}
+                                <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Комментарий (необязательно)</label>
+                        <textarea name="comment" class="form-control" rows="3" placeholder="Например: работа выполнена отлично, но есть мелкие недочёты..."></textarea>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'teacher_gradebook' subject.id %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Назад
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Сохранить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

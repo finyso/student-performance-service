@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Моя посещаемость{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4"><i class="bi bi-calendar-check"></i> Моя посещаемость</h1>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="text-primary">{{ attendance_percentage }}%</h2>
+                <p class="text-muted mb-0">Общая посещаемость</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="text-success">{{ present }}</h2>
+                <p class="text-muted mb-0">Присутствовал</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="text-danger">{{ absent }}</h2>
+                <p class="text-muted mb-0">Пропуски</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="text-warning">{{ late }}</h2>
+                <p class="text-muted mb-0">Опоздания</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="text-info">{{ excused }}</h2>
+                <p class="text-muted mb-0">Уважительные</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h4 class="mb-0">История посещаемости</h4>
+    </div>
+    <div class="card-body table-responsive">
+        {% if attendances %}
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Дата</th>
+                        <th>Предмет</th>
+                        <th>Преподаватель</th>
+                        <th>Статус</th>
+                        <th>Комментарий</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for att in attendances %}
+                        <tr>
+                            <td>{{ att.date|date:"d.m.Y" }} ({{ att.date|date:"l" }})</td>
+                            <td>{{ att.schedule.subject.name }}<br>
+                                <small class="text-muted">{{ att.schedule.lesson_number }} пара</small>
+                            </td>
+                            <td>{{ att.schedule.teacher.last_name }} {{ att.schedule.teacher.first_name|slice:":1" }}.</td>
+                            <td>
+                                <span class="badge bg-{{ att.get_status_color }}">
+                                    {{ att.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ att.comment|default:"—" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="text-muted text-center py-5">Нет записей о посещаемости</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

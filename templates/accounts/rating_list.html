@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}Рейтинг студентов{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4"><i class="bi bi-trophy-fill"></i> Рейтинг студентов</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-7">
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="bi bi-star-fill"></i> Топ 10 студентов</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Место</th>
+                                <th>Студент</th>
+                                <th>Группа</th>
+                                <th>Рейтинг</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in top_10 %}
+                                <tr>
+                                    <td>
+                                        {% if student.rank == 1 %}
+                                            <span class="badge bg-warning rounded-pill">🏆 1</span>
+                                        {% elif student.rank == 2 %}
+                                            <span class="badge bg-secondary rounded-pill">🥈 2</span>
+                                        {% elif student.rank == 3 %}
+                                            <span class="badge bg-danger rounded-pill">🥉 3</span>
+                                        {% else %}
+                                            {{ student.rank }}
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ student.name }}</td>
+                                    <td>{{ student.group }}</td>
+                                    <td><strong>{{ student.rating }}</strong></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-5">
+        {% if group_rating %}
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-people-fill"></i> Рейтинг в группе {{ user.student_profile.group.name }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Место</th>
+                                    <th>Студент</th>
+                                    <th>Рейтинг</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in group_rating %}
+                                    <tr>
+                                        <td>{{ student.rank }}</td>
+                                        <td>{{ student.name }}</td>
+                                        <td>{{ student.rating }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        
+        {% if user_rating %}
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h5>Ваша позиция в рейтинге</h5>
+                    <h2 class="display-4">{{ user_rating.rank }}</h2>
+                    <p>Рейтинг: {{ user_rating.rating }}</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> 
+            <strong>Формула расчёта рейтинга:</strong><br>
+            Рейтинг = 70% (средняя оценка) + 20% (посещаемость) + 10% (активность)
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Обработка заявки #{{ request.id }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Обработка заявки #{{ request.id }}</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <strong>Студент:</strong> {{ request.student.user.get_full_name }}<br>
+                    <strong>Тип:</strong> {{ request.get_request_type_display }}<br>
+                    <strong>Заголовок:</strong> {{ request.title }}
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Описание:</strong>
+                    <p class="border rounded p-3 bg-light">{{ request.description|linebreaks }}</p>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Статус</label>
+                        <select name="status" class="form-select" required>
+                            {% for value, label in status_choices %}
+                                <option value="{{ value }}" {% if request.status == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Комментарий администратора</label>
+                        <textarea name="admin_comment" class="form-control" rows="5">{{ request.admin_comment }}</textarea>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'admin_requests' %}" class="btn btn-secondary">Назад</a>
+                        <button type="submit" class="btn btn-primary">Сохранить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Контакты{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4"><i class="bi bi-telephone"></i> Контакты</h1>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Наши контакты</h4>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    {% for contact in contacts %}
+                        <li class="mb-3 pb-2 border-bottom">
+                            <h5>{{ contact.name }}</h5>
+                            <p><i class="bi bi-telephone"></i> {{ contact.phone }}</p>
+                            <p><i class="bi bi-envelope"></i> {{ contact.email }}</p>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Реквизиты</h4>
+            </div>
+            <div class="card-body">
+                <p><strong>УНП:</strong> 123456789</p>
+                <p><strong>Юридический адрес:</strong> г. Минск, ул. Академическая, 15</p>
+                <p><strong>Режим работы:</strong> Пн-Пт: 9:00 - 18:00</p>
+                <p><strong>Время работы техподдержки:</strong> 24/7</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

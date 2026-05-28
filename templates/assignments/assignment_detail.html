@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}{{ assignment.title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">{{ assignment.title }}</h4>
+                <span class="badge bg-{{ assignment.get_priority_color }}">
+                    {{ assignment.get_priority_display }} приоритет
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Предмет:</strong> {{ assignment.subject.name }}<br>
+                    <strong>Дедлайн:</strong> 
+                    {% if is_overdue %}
+                        <span class="text-danger">{{ assignment.deadline|date:"d.m.Y H:i" }} (просрочено)</span>
+                    {% else %}
+                        {{ assignment.deadline|date:"d.m.Y H:i" }}
+                    {% endif %}<br>
+                    <strong>Максимальный балл:</strong> {{ assignment.max_score }}
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Описание задания:</strong>
+                    <div class="border rounded p-3 bg-light mt-2">
+                        {{ assignment.description|linebreaks }}
+                    </div>
+                </div>
+                
+                {% if assignment.attachment %}
+                    <div class="mb-3">
+                        <strong>Вложение:</strong>
+                        <a href="{{ assignment.attachment.url }}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-download"></i> Скачать
+                        </a>
+                    </div>
+                {% endif %}
+                
+                <hr>
+                
+                {% if submission %}
+                    <div class="alert alert-info">
+                        <strong>Ваш статус:</strong>
+                        {% if submission.status == 'draft' %}
+                            Черновик сохранён, но не сдан
+                        {% elif submission.status == 'submitted' %}
+                            Задание сдано, ожидает проверки
+                        {% elif submission.status == 'graded' %}
+                            Задание проверено. Оценка: {{ submission.score }}/{{ assignment.max_score }}
+                        {% endif %}
+                    </div>
+                    
+                    {% if submission.feedback %}
+                        <div class="alert alert-secondary">
+                            <strong>Отзыв преподавателя:</strong><br>
+                            {{ submission.feedback|linebreaks }}
+                        </div>
+                    {% endif %}
+                    
+                    {% if not is_overdue and submission.status != 'graded' %}
+                        <div class="text-center">
+                            <a href="{% url 'submit_assignment' assignment.id %}" class="btn btn-primary">
+                                <i class="bi bi-pencil"></i> 
+                                {% if submission.status == 'draft' %}Редактировать и сдать{% else %}Изменить ответ{% endif %}
+                            </a>
+                        </div>
+                    {% endif %}
+                {% elif not is_overdue %}
+                    <div class="text-center">
+                        <a href="{% url 'submit_assignment' assignment.id %}" class="btn btn-success btn-lg">
+                            <i class="bi bi-cloud-upload"></i> Сдать задание
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="alert alert-danger text-center">
+                        <i class="bi bi-exclamation-triangle"></i> Дедлайн этого задания уже прошёл. Сдать задание невозможно.
+                    </div>
+                {% endif %}
+                
+                <div class="text-center mt-3">
+                    <a href="{% url 'assignments_list' %}" class="btn btn-secondary">← Назад к списку</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

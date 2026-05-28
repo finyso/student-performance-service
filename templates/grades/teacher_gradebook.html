@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load grade_filters %}
+
+{% block title %}Журнал оценок{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4"><i class="bi bi-journal"></i> Журнал оценок</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Предметы</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for subject in subjects %}
+                    <a href="{% url 'teacher_gradebook' subject.id %}" class="list-group-item list-group-item-action {% if selected_subject.id == subject.id %}active{% endif %}">
+                        {{ subject.name }}
+                        <small class="d-block text-muted">{{ subject.semester }} семестр</small>
+                    </a>
+                {% empty %}
+                    <div class="list-group-item text-muted">Нет предметов</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        {% if selected_subject %}
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">{{ selected_subject.name }}</h4>
+                    <small class="text-muted">{{ selected_subject.semester }} семестр</small>
+                </div>
+                <div class="card-body table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="min-width: 200px;">Студент</th>
+                                {% for type_code, type_name in grade_types %}
+                                    <th class="text-center">{{ type_name }}</th>
+                                {% endfor %}
+                                <th class="text-center">Средний</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for data in grades_data.values %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ data.student.user.last_name }} {{ data.student.user.first_name }}</strong>
+                                        <br>
+                                        <small class="text-muted">Группа: {{ data.student.group.name|default:"Не назначена" }}</small>
+                                    </td>
+                                    {% for type_code, type_name in grade_types %}
+                                        <td class="text-center align-middle">
+                                            {% with grade=data.grades|get_item:type_code %}
+                                                {% if grade %}
+                                                    <span class="badge bg-{{ grade.get_grade_display_color }} fs-6">
+                                                        {{ grade.value }}
+                                                    </span>
+                                                    <br>
+                                                    <a href="{% url 'add_grade' data.student.id selected_subject.id %}?type={{ type_code }}" 
+                                                       class="btn btn-sm btn-outline-primary mt-2"
+                                                       title="Редактировать оценку">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                {% else %}
+                                                    <a href="{% url 'add_grade' data.student.id selected_subject.id %}?type={{ type_code }}" 
+                                                       class="btn btn-sm btn-outline-success"
+                                                       title="Поставить оценку">
+                                                        <i class="bi bi-plus-circle"></i>
+                                                    </a>
+                                                {% endif %}
+                                            {% endwith %}
+                                        </td>
+                                    {% endfor %}
+                                    <td class="text-center align-middle">
+                                        <strong class="fs-5">{{ data.avg|floatformat:1 }}</strong>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="{{ grade_types|length|add:2 }}" class="text-center text-muted py-5">
+                                        <i class="bi bi-people fs-1"></i>
+                                        <p class="mt-2">Нет студентов в этой группе</p>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% else %}
+            <div class="alert alert-info text-center py-5">
+                <i class="bi bi-info-circle fs-1"></i>
+                <p class="mt-3">Выберите предмет из списка слева, чтобы начать работу с журналом</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Добавляем подсказки для кнопок
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+        if (typeof bootstrap !== 'undefined') {
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        }
+    });
+</script>
+{% endblock %}

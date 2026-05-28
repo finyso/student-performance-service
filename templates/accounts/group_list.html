@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Моя группа{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4"><i class="bi bi-people-fill"></i> Группа {{ group.name }}</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Информация о группе</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Название:</strong> {{ group.name }}</p>
+                <p><strong>Курс:</strong> {{ group.course }}</p>
+                <p><strong>Специальность:</strong> {{ group.specialty }}</p>
+                <p><strong>Староста:</strong> 
+                    {% if headman %}
+                        {{ headman.user.get_full_name }}
+                    {% else %}
+                        Не назначен
+                    {% endif %}
+                </p>
+                <p><strong>Куратор:</strong> 
+                    {% if group.curator %}
+                        {{ group.curator.get_full_name }}
+                    {% else %}
+                        Не назначен
+                    {% endif %}
+                </p>
+                <p><strong>Всего студентов:</strong> {{ students|length }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Список студентов</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>ФИО</th>
+                                <th>Староста</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ student.user.last_name }} {{ student.user.first_name }}</td>
+                                    <td>
+                                        {% if headman and headman.id == student.id %}
+                                            <span class="badge bg-warning">⭐ Староста</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted">Нет студентов</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

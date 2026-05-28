@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block title %}Аналитика преподавателя{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4"><i class="bi bi-graph-up"></i> Аналитика преподавателя</h1>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="text-primary">{{ total_students }}</h2>
+                <p class="text-muted mb-0">Всего студентов</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="text-success">{{ total_grades }}</h2>
+                <p class="text-muted mb-0">Всего оценок</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="text-info">{{ avg_grade_overall }}</h2>
+                <p class="text-muted mb-0">Средний балл</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Успеваемость по группам</h5>
+            </div>
+            <div class="card-body text-center">
+                {% if group_chart %}
+                    <img src="data:image/png;base64,{{ group_chart }}" class="img-fluid" alt="Успеваемость по группам">
+                {% else %}
+                    <p class="text-muted">Недостаточно данных для отображения графика</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Успеваемость по предметам</h5>
+            </div>
+            <div class="card-body text-center">
+                {% if subject_chart %}
+                    <img src="data:image/png;base64,{{ subject_chart }}" class="img-fluid" alt="Успеваемость по предметам">
+                {% else %}
+                    <p class="text-muted">Недостаточно данных для отображения графика</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Распределение оценок</h5>
+            </div>
+            <div class="card-body text-center">
+                {% if grade_dist_chart %}
+                    <img src="data:image/png;base64,{{ grade_dist_chart }}" class="img-fluid" alt="Распределение оценок">
+                {% else %}
+                    <p class="text-muted">Недостаточно данных для отображения графика</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Топ студентов</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    {% for student in top_students %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ student.name }}</strong>
+                                <small class="text-muted d-block">{{ student.group }}</small>
+                            </div>
+                            <span class="badge bg-primary rounded-pill">{{ student.avg }}</span>
+                        </div>
+                    {% empty %}
+                        <p class="text-muted text-center">Нет данных</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Экспорт данных</h5>
+            </div>
+            <div class="card-body">
+                <div class="btn-group">
+                    <a href="{% url 'export_grades' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-download"></i> Экспорт оценок (CSV)
+                    </a>
+                    <a href="{% url 'export_attendance' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-download"></i> Экспорт посещаемости (CSV)
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

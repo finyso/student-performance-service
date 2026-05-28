@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Сервис учёта успеваемости студентов{% endblock %}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%232c3e50'><path d='M8 0L0 4v8l8 4 8-4V4L8 0zm0 2.5L13 6l-5 3-5-3 5-2.5z'/></svg>">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+            <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            height: 100%;
+            min-height: 100vh;
+        }
+        
+        body {
+            display: flex;
+            min-height: 100vh;
+            background-color: #f0f2f5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+        
+        /* Dark mode body background */
+        body.dark-mode {
+            background-color: #1a2632;
+        }
+        
+        /* Top Header */
+        .top-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 56px;
+            background: #2c3e50;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 1001;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        body.dark-mode .top-header {
+            background: #1a2632;
+        }
+        
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .logo-area i {
+            font-size: 24px;
+        }
+        
+        .logo-area span {
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .theme-toggle-header {
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .theme-toggle-header:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .theme-toggle-header i {
+            font-size: 20px;
+            color: white;
+        }
+        
+        .user-menu {
+            position: relative;
+        }
+        
+        .user-btn {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 6px 12px;
+            transition: background 0.2s;
+        }
+        
+        .user-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .user-btn i:first-child {
+            font-size: 18px;
+        }
+        
+        .user-btn span {
+            font-size: 14px;
+        }
+        
+        .dropdown-menu-custom {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: white;
+            min-width: 180px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1002;
+            overflow: hidden;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s, visibility 0.2s;
+        }
+        
+        body.dark-mode .dropdown-menu-custom {
+            background: #1e2a3a;
+        }
+        
+        .user-menu:hover .dropdown-menu-custom {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .dropdown-menu-custom a {
+            color: #333;
+            padding: 10px 16px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.2s;
+            font-size: 14px;
+        }
+        
+        body.dark-mode .dropdown-menu-custom a {
+            color: #e0e0e0;
+        }
+        
+        .dropdown-menu-custom a:hover {
+            background: #f5f5f5;
+        }
+        
+        body.dark-mode .dropdown-menu-custom a:hover {
+            background: #2c3e50;
+        }
+        
+        .dropdown-menu-custom form {
+            margin: 0;
+        }
+        
+        .dropdown-menu-custom button {
+            width: 100%;
+            text-align: left;
+            padding: 10px 16px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #dc3545;
+            font-size: 14px;
+        }
+        
+        body.dark-mode .dropdown-menu-custom button {
+            color: #e74c3c;
+        }
+        
+        .dropdown-menu-custom button:hover {
+            background: #f5f5f5;
+        }
+        
+        body.dark-mode .dropdown-menu-custom button:hover {
+            background: #2c3e50;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 56px;
+            height: calc(100vh - 56px);
+            width: 68px;
+            background: #34495e;
+            transition: width 0.25s ease;
+            z-index: 1000;
+            overflow-x: hidden;
+            overflow-y: auto;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+        }
+        
+        body.dark-mode .sidebar {
+            background: #1e2a3a;
+        }
+        
+        .sidebar:hover {
+            width: 240px;
+        }
+        
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .sidebar::-webkit-scrollbar-track {
+            background: #2c3e50;
+        }
+        
+        body.dark-mode .sidebar::-webkit-scrollbar-track {
+            background: #1a2632;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #5d6d7e;
+            border-radius: 4px;
+        }
+        
+        .sidebar .nav-links {
+            list-style: none;
+            padding: 12px 0;
+        }
+        
+        .sidebar .nav-links li {
+            margin: 2px 8px;
+            border-radius: 8px;
+        }
+        
+        .sidebar .nav-links li:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .sidebar .nav-links li a {
+            color: #ecf0f1;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            white-space: nowrap;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .sidebar .nav-links li a i {
+            font-size: 18px;
+            min-width: 24px;
+        }
+        
+        .sidebar .nav-links li a span {
+            display: none;
+        }
+        
+        .sidebar:hover .nav-links li a span {
+            display: inline;
+        }
+        
+        .sidebar-divider {
+            height: 1px;
+            background: rgba(255,255,255,0.1);
+            margin: 12px 8px;
+        }
+        
+        .badge-notification {
+            display: inline-block;
+            background: #e74c3c;
+            color: white;
+            border-radius: 10px;
+            padding: 2px 6px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        
+        .sidebar:hover .badge-notification {
+            float: right;
+            margin-top: 2px;
+        }
+        
+        /* Main content - FIXED for dark mode */
+        .main-content {
+            margin-left: 68px;
+            margin-top: 56px;
+            transition: margin-left 0.25s ease;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: calc(100vh - 56px);
+            background-color: #f0f2f5;
+        }
+        
+        body.dark-mode .main-content {
+            background-color: #1a2632;
+        }
+        
+        .sidebar:hover ~ .main-content {
+            margin-left: 240px;
+        }
+        
+        /* Content wrapper - full height background */
+        .content-wrapper {
+            flex: 1;
+            padding: 24px;
+            background-color: #f0f2f5;
+        }
+        
+        body.dark-mode .content-wrapper {
+            background-color: #1a2632;
+        }
+        
+        /* Cards */
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            transition: box-shadow 0.2s;
+            background-color: white;
+        }
+        
+        body.dark-mode .card {
+            background-color: #1e2a3a;
+            color: #e0e0e0;
+        }
+        
+        .card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid #e9ecef;
+            padding: 16px 20px;
+            font-weight: 600;
+        }
+        
+        body.dark-mode .card-header {
+            background-color: #1e2a3a;
+            border-bottom-color: #2c3e50;
+            color: #e0e0e0;
+        }
+        
+        .btn-primary {
+            background: #3498db;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 20px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-outline-primary {
+            border: 1px solid #3498db;
+            color: #3498db;
+            background: transparent;
+        }
+        
+        .btn-outline-primary:hover {
+            background: #3498db;
+            color: white;
+        }
+        
+        /* Footer */
+        footer {
+            background-color: #2c3e50;
+            color: #bdc3c7;
+            padding: 12px 0;
+            text-align: center;
+            font-size: 13px;
+        }
+        
+        body.dark-mode footer {
+            background-color: #1a2632;
+        }
+        
+        /* Tables */
+        .table {
+            background-color: transparent;
+        }
+        
+        body.dark-mode .table {
+            color: #e0e0e0;
+        }
+        
+        body.dark-mode .table-striped > tbody > tr:nth-of-type(odd) {
+            background-color: rgba(255,255,255,0.03);
+        }
+        
+        body.dark-mode .text-muted {
+            color: #95a5a6 !important;
+        }
+        
+        /* Table bordered for dark mode */
+        body.dark-mode .table-bordered {
+            border-color: #2c3e50;
+        }
+        
+        body.dark-mode .table-bordered td,
+        body.dark-mode .table-bordered th {
+            border-color: #2c3e50;
+        }
+        
+        /* Form controls for dark mode */
+        body.dark-mode .form-control,
+        body.dark-mode .form-select {
+            background-color: #1e2a3a;
+            border-color: #2c3e50;
+            color: #e0e0e0;
+        }
+        
+        body.dark-mode .form-control:focus,
+        body.dark-mode .form-select:focus {
+            background-color: #1e2a3a;
+            color: #e0e0e0;
+        }
+        
+        body.dark-mode .bg-light {
+            background-color: #1e2a3a !important;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 0;
+                display: none;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+        
+        /* Stats cards */
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        
+        body.dark-mode .stat-card {
+            background: #1e2a3a;
+        }
+        
+        /* Fix for alerts */
+        body.dark-mode .alert-info {
+            background-color: #1e2a3a;
+            border-color: #3498db;
+            color: #e0e0e0;
+        }
+        
+        body.dark-mode .alert-success {
+            background-color: #1e2a3a;
+            border-color: #27ae60;
+            color: #e0e0e0;
+        }
+        
+        body.dark-mode .alert-warning {
+            background-color: #1e2a3a;
+            border-color: #f39c12;
+            color: #e0e0e0;
+        }
+        
+        body.dark-mode .alert-danger {
+            background-color: #1e2a3a;
+            border-color: #e74c3c;
+            color: #e0e0e0;
+        }
+
+         .hover-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .hover-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+        }
+        
+        .hover-card:hover i {
+            animation: iconBounce 0.5s ease;
+        }
+        
+        @keyframes iconBounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+        
+        .hover-card i {
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Top Header -->
+    <div class="top-header">
+        <div class="logo-area">
+            <a href="{% url 'home' %}" style="text-decoration: none; color: white; display: flex; align-items: center; gap: 12px;">
+                <i class="bi bi-mortarboard-fill"></i>
+                <span>Student Performance</span>
+            </a>
+        </div>
+        
+        <div class="header-right">
+            <div class="theme-toggle-header" onclick="toggleDarkMode()">
+                <i id="themeIcon" class="bi bi-moon"></i>
+            </div>
+            
+            {% if user.is_authenticated %}
+                <div class="user-menu">
+                    <div class="user-btn">
+                        <i class="bi bi-person-circle"></i>
+                        <span>{{ user.get_full_name|default:user.username|truncatechars:20 }}</span>
+                        <i class="bi bi-chevron-down" style="font-size: 12px;"></i>
+                    </div>
+                    <div class="dropdown-menu-custom">
+                        <a href="{% url 'profile' %}">
+                            <i class="bi bi-person"></i> Мой профиль
+                        </a>
+                        <form action="{% url 'logout' %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit">
+                                <i class="bi bi-box-arrow-right"></i> Выход
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            {% else %}
+                <div class="user-menu">
+                    <div class="user-btn">
+                        <i class="bi bi-box-arrow-in-right"></i>
+                        <span>Войти</span>
+                        <i class="bi bi-chevron-down" style="font-size: 12px;"></i>
+                    </div>
+                    <div class="dropdown-menu-custom">
+                        <a href="{% url 'login' %}">
+                            <i class="bi bi-box-arrow-in-right"></i> Вход
+                        </a>
+                        <a href="{% url 'register' %}">
+                            <i class="bi bi-person-plus"></i> Регистрация
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <ul class="nav-links">
+            <li>
+                <a href="{% url 'home' %}">
+                    <i class="bi bi-house"></i>
+                    <span>Главная</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'about' %}">
+                    <i class="bi bi-info-circle"></i>
+                    <span>О нас</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'news_list' %}">
+                    <i class="bi bi-newspaper"></i>
+                    <span>Новости</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'contacts' %}">
+                    <i class="bi bi-telephone"></i>
+                    <span>Контакты</span>
+                </a>
+            </li>
+            
+            {% if user.is_authenticated %}
+                <li class="sidebar-divider"></li>
+                
+                {% if user.role == 'student' or user.role == 'headman' %}
+                    <li>
+                        <a href="{% url 'gradebook_view' %}">
+                            <i class="bi bi-journal"></i>
+                            <span>Зачётка</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'student_statistics' %}">
+                            <i class="bi bi-graph-up"></i>
+                            <span>Статистика</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'schedule_view' %}">
+                            <i class="bi bi-calendar"></i>
+                            <span>Расписание</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'student_attendance' %}">
+                            <i class="bi bi-calendar-check"></i>
+                            <span>Посещаемость</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'assignments_list' %}">
+                            <i class="bi bi-journal-bookmark-fill"></i>
+                            <span>Задания</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'requests_list' %}">
+                            <i class="bi bi-envelope"></i>
+                            <span>Заявки</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'group_list' %}">
+                            <i class="bi bi-people-fill"></i>
+                            <span>Моя группа</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'penalties_list' %}">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            <span>Взыскания</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'student_announcements' %}">
+                            <i class="bi bi-megaphone-fill"></i>
+                            <span>Объявления</span>
+                        </a>
+                    </li>
+                {% elif user.role == 'teacher' %}
+                    <li>
+                        <a href="{% url 'teacher_gradebook' %}">
+                            <i class="bi bi-journal"></i>
+                            <span>Журнал оценок</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'schedule_view' %}">
+                            <i class="bi bi-calendar"></i>
+                            <span>Расписание</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'teacher_attendance' %}">
+                            <i class="bi bi-check2-square"></i>
+                            <span>Посещаемость</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'teacher_assignments' %}">
+                            <i class="bi bi-journal-bookmark-fill"></i>
+                            <span>Задания</span>
+                        </a>
+                    </li>
+                {% elif user.role == 'curator' %}
+                    <li>
+                        <a href="{% url 'schedule_view' %}">
+                            <i class="bi bi-calendar"></i>
+                            <span>Расписание группы</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'curator_announcements' %}">
+                            <i class="bi bi-megaphone-fill"></i>
+                            <span>Объявления</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'curator_group_students' %}">
+                            <i class="bi bi-people-fill"></i>
+                            <span>Моя группа</span>
+                        </a>
+                    </li>
+                {% elif user.is_superuser %}
+                    <li>
+                        <a href="{% url 'admin_all_grades' %}">
+                            <i class="bi bi-journal"></i>
+                            <span>Все оценки</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'admin_all_schedule' %}">
+                            <i class="bi bi-calendar"></i>
+                            <span>Расписание групп</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'admin_attendance' %}">
+                            <i class="bi bi-check2-square"></i>
+                            <span>Посещаемость</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'admin_penalties' %}">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            <span>Взыскания</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'admin_requests' %}">
+                            <i class="bi bi-envelope-paper"></i>
+                            <span>Заявки</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/">
+                            <i class="bi bi-shield-lock"></i>
+                            <span>Django Admin</span>
+                        </a>
+                    </li>
+                {% endif %}
+                {% if user.role == 'headman' %}
+                    <li>
+                        <a href="{% url 'headman_attendance' %}">
+                            <i class="bi bi-check2-square"></i>
+                            <span>Посещаемость группы</span>
+                        </a>
+                    </li>
+                {% endif %}
+
+                <li class="sidebar-divider"></li>
+                
+                {% if user.role == 'student' or user.role == 'headman' or user.is_superuser or user.role == 'teacher'%}
+                    <li>
+                    <a href="{% url 'analytics_dashboard' %}">
+                        <i class="bi bi-graph-up"></i>
+                        <span>Аналитика</span>
+                    </a>
+                    </li>
+                {% endif %}
+                <li>
+                    <a href="{% url 'rating_list' %}">
+                        <i class="bi bi-trophy"></i>
+                        <span>Рейтинг</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'notifications_list' %}">
+                        <i class="bi bi-bell"></i>
+                        <span>Уведомления</span>
+                        {% if unread_count > 0 %}
+                            <span class="badge-notification">{{ unread_count }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </div>
+    
+    <!-- Main content -->
+    <div class="main-content">
+        <div class="content-wrapper">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        <i class="bi bi-info-circle"></i> {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            {% block content %}{% endblock %}
+        </div>
+        
+        <footer>
+            <div class="container">
+                <p class="mb-0">&copy; 2026 Сервис учёта успеваемости студентов</p>
+            </div>
+        </footer>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const icon = document.getElementById('themeIcon');
+            if (document.body.classList.contains('dark-mode')) {
+                icon.className = 'bi bi-sun';
+                localStorage.setItem('darkMode', 'true');
+            } else {
+                icon.className = 'bi bi-moon';
+                localStorage.setItem('darkMode', 'false');
+            }
+        }
+        
+        // Load dark mode preference
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('themeIcon').className = 'bi bi-sun';
+        }
+        
+        // Save scroll position for sidebar (fix for issue #5)
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar) {
+                const savedScroll = sessionStorage.getItem('sidebarScroll');
+                if (savedScroll) {
+                    sidebar.scrollTop = parseInt(savedScroll);
+                }
+                sidebar.addEventListener('scroll', function() {
+                    sessionStorage.setItem('sidebarScroll', sidebar.scrollTop);
+                });
+            }
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

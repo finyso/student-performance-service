@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Зачётка{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4"><i class="bi bi-journal-bookmark-fill"></i> Моя зачётка</h1>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-primary">{{ avg_grade }}</h3>
+                <p class="text-muted mb-0">Средний балл</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-primary">{{ grades_count }}</h3>
+                <p class="text-muted mb-0">Всего оценок</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-primary">{{ student.group.name|default:"Не назначена" }}</h3>
+                <p class="text-muted mb-0">Группа</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h4 class="mb-0">Оценки по предметам</h4>
+    </div>
+    <div class="card-body">
+        {% if subjects_grades %}
+            {% for subject, grades in subjects_grades.items %}
+                <div class="mb-4">
+                    <h5>{{ subject.name }}</h5>
+                    <table class="table table-sm table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Тип работы</th>
+                                <th>Оценка</th>
+                                <th>Комментарий</th>
+                                <th>Дата</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for grade in grades %}
+                                <tr>
+                                    <td>{{ grade.get_grade_type_display }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ grade.get_grade_display_color }}">
+                                            {{ grade.value }}
+                                        </span>
+                                    </td>
+                                    <td>{{ grade.comment|default:"—" }}</td>
+                                    <td>{{ grade.created_at|date:"d.m.Y" }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted text-center">У вас пока нет оценок</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

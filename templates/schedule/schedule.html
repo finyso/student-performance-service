@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Расписание занятий{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="bi bi-calendar-week"></i> Расписание занятий</h1>
+            <div>
+                <a href="?week={{ week_offset|add:-1 }}" class="btn btn-outline-primary">
+                    <i class="bi bi-chevron-left"></i> Предыдущая неделя
+                </a>
+                <a href="?week=0" class="btn btn-outline-secondary mx-2">Текущая неделя</a>
+                <a href="?week={{ week_offset|add:1 }}" class="btn btn-outline-primary">
+                    Следующая неделя <i class="bi bi-chevron-right"></i>
+                </a>
+            </div>
+        </div>
+        
+        <p class="text-muted mb-4">
+            <i class="bi bi-calendar"></i> Неделя от {{ current_date|date:"d.m.Y" }}
+        </p>
+    </div>
+</div>
+
+<div class="row">
+    {% for weekday_num, weekday_name in weekdays %}
+        <div class="col-md-2 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white text-center">
+                    <strong>{{ weekday_name }}</strong>
+                    <small>{{ current_date|date:"d.m.Y" }}</small>
+                </div>
+                <div class="card-body p-2">
+                    {% with schedule_by_day|get_item:weekday_num as schedules %}
+                        {% if schedules %}
+                            {% for schedule in schedules %}
+                                <div class="schedule-item mb-2 p-2 border rounded">
+                                    <small class="text-muted">{{ schedule.lesson_number }} пара</small>
+                                    <div class="fw-bold">{{ schedule.subject.name }}</div>
+                                    <small>{{ schedule.start_time|time:"H:i" }} - {{ schedule.end_time|time:"H:i" }}</small>
+                                    <div class="text-muted small">
+                                        <i class="bi bi-door-closed"></i> {{ schedule.classroom }}
+                                    </div>
+                                    {% if user.role == 'teacher' %}
+                                        <small class="text-info">{{ schedule.group.name }}</small>
+                                    {% elif user.role == 'student' %}
+                                        <small class="text-info">{{ schedule.teacher.last_name }} {{ schedule.teacher.first_name|slice:":1" }}.</small>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center text-muted py-3">
+                                <i class="bi bi-calendar-x"></i>
+                                <div class="small">Нет занятий</div>
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+{% if not user.is_authenticated %}
+<div class="alert alert-info mt-4">
+    <i class="bi bi-info-circle"></i> Для просмотра расписания необходимо <a href="{% url 'login' %}">войти в систему</a>.
+</div>
+{% endif %}
+{% endblock %}

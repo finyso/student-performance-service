@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Отметка посещаемости{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="bi bi-check2-square"></i> Отметка посещаемости</h1>
+            <div>
+                <a href="{% url 'schedule_view' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> К расписанию
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">{{ schedule.subject.name }}</h4>
+                <small>
+                    {{ schedule.group.name }} | {{ schedule.get_weekday_display }}, 
+                    {{ schedule.lesson_number }} пара ({{ schedule.start_time|time:"H:i" }} - {{ schedule.end_time|time:"H:i" }})
+                </small>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Студент</th>
+                                    <th>Статус</th>
+                                    <th>Комментарий</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ student.user.last_name }} {{ student.user.first_name }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ student.group.name }}</small>
+                                        </td>
+                                        <td width="250">
+                                            <select name="status_{{ student.id }}" class="form-select">
+                                                {% for value, label in status_choices %}
+                                                    <option value="{{ value }}" 
+                                                        {% with attendances|get_item:student.id as attendance %}
+                                                            {% if attendance and attendance.status == value %}selected{% endif %}
+                                                        {% endwith %}>
+                                                        {{ label }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="text" name="comment_{{ student.id }}" 
+                                                   class="form-control" 
+                                                   placeholder="Причина пропуска..."
+                                                   value="{% with attendances|get_item:student.id as attendance %}{{ attendance.comment|default:'' }}{% endwith %}">
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-4 d-flex justify-content-between">
+                        <a href="{% url 'teacher_attendance' %}" class="btn btn-secondary">Назад</a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-save"></i> Сохранить посещаемость
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> 
+            <strong>Подсказка:</strong> 
+            <span class="badge bg-success">Присутствовал</span> - студент был на занятии,
+            <span class="badge bg-danger">Отсутствовал</span> - студент отсутствовал,
+            <span class="badge bg-warning">Опоздал</span> - студент опоздал,
+            <span class="badge bg-info">Уважительная причина</span> - пропуск по уважительной причине.
+        </div>
+    </div>
+</div>
+{% endblock %}

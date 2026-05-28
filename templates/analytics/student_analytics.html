@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}Моя аналитика{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4"><i class="bi bi-graph-up"></i> Моя аналитика</h1>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="text-primary">{{ avg_grade }}</h2>
+                <p class="text-muted mb-0">Средний балл</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="text-success">{{ attendance_rate }}%</h2>
+                <p class="text-muted mb-0">Посещаемость</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="text-info">{{ total_grades }}</h2>
+                <p class="text-muted mb-0">Всего оценок</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Динамика успеваемости</h5>
+            </div>
+            <div class="card-body text-center">
+                {% if grades_trend_chart %}
+                    <img src="data:image/png;base64,{{ grades_trend_chart }}" class="img-fluid" alt="Динамика успеваемости">
+                {% else %}
+                    <p class="text-muted">Недостаточно данных для отображения графика</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Распределение оценок</h5>
+            </div>
+            <div class="card-body text-center">
+                {% if grade_dist_chart %}
+                    <img src="data:image/png;base64,{{ grade_dist_chart }}" class="img-fluid" alt="Распределение оценок">
+                {% else %}
+                    <p class="text-muted">Недостаточно данных для отображения графика</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Средний балл по предметам</h5>
+            </div>
+            <div class="card-body text-center">
+                {% if subject_chart %}
+                    <img src="data:image/png;base64,{{ subject_chart }}" class="img-fluid" alt="Средний балл по предметам">
+                {% else %}
+                    <p class="text-muted">Недостаточно данных для отображения графика</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Успеваемость по семестрам</h5>
+            </div>
+            <div class="card-body table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Семестр</th>
+                            <th>Средний балл</th>
+                            <th>Отлично (9-10)</th>
+                            <th>Хорошо (7-8)</th>
+                            <th>Удовлетворительно (5-6)</th>
+                            <th>Всего</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sem, data in semester_data.items %}
+                            <tr>
+                                <td>{{ sem }}</td>
+                                <td>{{ data.avg }}</td>
+                                <td class="text-success">{{ data.excellent }}</td>
+                                <td class="text-primary">{{ data.good }}</td>
+                                <td class="text-warning">{{ data.satisfactory }}</td>
+                                <td>{{ data.count }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">Нет данных</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ news.title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">Главная</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'news_list' %}">Новости</a></li>
+                <li class="breadcrumb-item active">{{ news.title }}</li>
+            </ol>
+        </nav>
+        
+        <div class="card">
+            {% if news.image %}
+                <img src="{{ news.image.url }}" class="card-img-top" alt="{{ news.title }}">
+            {% endif %}
+            <div class="card-body">
+                <h1 class="card-title">{{ news.title }}</h1>
+                <p class="text-muted">
+                    <i class="bi bi-calendar"></i> {{ news.created_at|date:"d.m.Y H:i" }}
+                    <span class="mx-2">|</span>
+                    <i class="bi bi-eye"></i> Просмотров: {{ news.views|default:"0" }}
+                </p>
+                <div class="mt-4">
+                    {{ news.content|linebreaks }}
+                </div>
+                <hr>
+                <a href="{% url 'news_list' %}" class="btn btn-outline-primary">← Назад к новостям</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

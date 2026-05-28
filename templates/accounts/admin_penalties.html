@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Управление взысканиями{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4"><i class="bi bi-gavel"></i> Управление взысканиями</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-5">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Добавить взыскание</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Студент</label>
+                        <select name="student_id" class="form-select" required>
+                            <option value="">Выберите студента</option>
+                            {% for student in students %}
+                                <option value="{{ student.id }}">
+                                    {{ student.user.last_name }} {{ student.user.first_name }} ({{ student.group.name|default:"Без группы" }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Тип взыскания</label>
+                        <select name="penalty_type" class="form-select" required>
+                            {% for value, label in penalty_types %}
+                                <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Причина</label>
+                        <textarea name="reason" class="form-control" rows="4" required></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">Добавить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Последние взыскания</h5>
+            </div>
+            <div class="card-body">
+                {% if penalties %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Дата</th>
+                                    <th>Студент</th>
+                                    <th>Тип</th>
+                                    <th>Причина</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for penalty in penalties %}
+                                    <tr>
+                                        <td>{{ penalty.issued_at|date:"d.m.Y" }}</td>
+                                        <td>{{ penalty.student.user.get_full_name }}</td>
+                                        <td>
+                                            <span class="badge bg-{{ penalty.get_penalty_color }}">
+                                                {{ penalty.get_penalty_type_display }}
+                                            </span>
+                                        </td>
+                                        <td>{{ penalty.reason|truncatechars:50 }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">Нет взысканий</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

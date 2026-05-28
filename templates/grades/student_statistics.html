@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}Статистика успеваемости{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4"><i class="bi bi-graph-up"></i> Статистика успеваемости</h1>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="text-primary">{{ total_avg|floatformat:1 }}</h2>
+                <p class="text-muted mb-0">Средний балл</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="text-primary">{{ total_count }}</h2>
+                <p class="text-muted mb-0">Всего оценок</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="text-primary">{{ student.group.name|default:"—" }}</h2>
+                <p class="text-muted mb-0">Группа</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Статистика по семестрам</h5>
+            </div>
+            <div class="card-body">
+                {% if semester_stats %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Семестр</th>
+                                    <th>Средний</th>
+                                    <th>Отл</th>
+                                    <th>Хор</th>
+                                    <th>Уд</th>
+                                    <th>Неуд</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sem, stats in semester_stats.items %}
+                                    <tr>
+                                        <td>{{ sem }}</td>
+                                        <td><strong>{{ stats.avg|floatformat:1 }}</strong></td>
+                                        <td class="text-success">{{ stats.excellent }}</td>
+                                        <td class="text-primary">{{ stats.good }}</td>
+                                        <td class="text-warning">{{ stats.satisfactory }}</td>
+                                        <td class="text-danger">{{ stats.unsatisfactory }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">Нет данных</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Статистика по типам работ</h5>
+            </div>
+            <div class="card-body">
+                {% if type_stats %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Тип работы</th>
+                                    <th>Средний</th>
+                                    <th>Количество</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stat in type_stats %}
+                                    <tr>
+                                        <td>{{ stat.grade_type }}</td>
+                                        <td><strong>{{ stat.avg|floatformat:1 }}</strong></td>
+                                        <td>{{ stat.count }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">Нет данных</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

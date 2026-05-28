@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Все оценки{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4"><i class="bi bi-journal"></i> Все оценки</h1>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <select name="group" class="form-select">
+                            <option value="">Все группы</option>
+                            {% for group in groups %}
+                                <option value="{{ group.id }}" {% if selected_group == group.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ group.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select name="subject" class="form-select">
+                            <option value="">Все предметы</option>
+                            {% for subject in subjects %}
+                                <option value="{{ subject.id }}" {% if selected_subject == subject.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ subject.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary w-100">Фильтровать</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body table-responsive">
+                {% if grades %}
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Студент</th>
+                                <th>Группа</th>
+                                <th>Предмет</th>
+                                <th>Оценка</th>
+                                <th>Тип</th>
+                                <th>Дата</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for grade in grades %}
+                                <tr>
+                                    <td>{{ grade.student.user.last_name }} {{ grade.student.user.first_name }}</td>
+                                    <td>{{ grade.student.group.name|default:"—" }}</td>
+                                    <td>{{ grade.subject.name }}</td>
+                                    <td><span class="badge bg-primary">{{ grade.value }}</span></td>
+                                    <td>{{ grade.get_grade_type_display }}</td>
+                                    <td>{{ grade.created_at|date:"d.m.Y" }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p class="text-muted text-center py-5">Нет оценок</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

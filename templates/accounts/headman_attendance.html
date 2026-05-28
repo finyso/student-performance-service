@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Посещаемость группы{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4"><i class="bi bi-check2-square"></i> Посещаемость группы {{ group.name }}</h1>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6 mx-auto">
+        <div class="card">
+            <div class="card-body">
+                <form method="get" class="d-flex gap-2">
+                    <input type="date" name="date" class="form-control" value="{{ selected_date|date:'Y-m-d' }}">
+                    <button type="submit" class="btn btn-primary">Выбрать дату</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if schedules %}
+    {% for schedule in schedules %}
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    {{ schedule.lesson_number }} пара: {{ schedule.subject.name }}
+                    ({{ schedule.start_time|time:"H:i" }} - {{ schedule.end_time|time:"H:i" }})
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="schedule_id" value="{{ schedule.id }}">
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Студент</th>
+                                    <th>Статус</th>
+                                    <th>Комментарий</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                    <tr>
+                                        <td>{{ student.user.last_name }} {{ student.user.first_name }}</td>
+                                        <td width="200">
+                                            <select name="status_{{ student.id }}" class="form-select">
+                                                {% for value, label in status_choices %}
+                                                    <option value="{{ value }}" 
+                                                        {% with key=schedule.id|stringformat:"s"|add:"_"|add:student.id|stringformat:"s" %}
+                                                            {% with attendance=attendances|get_item:key %}
+                                                                {% if attendance and attendance.status == value %}selected{% endif %}
+                                                            {% endwith %}
+                                                        {% endwith %}>
+                                                        {{ label }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="text" name="comment_{{ student.id }}" class="form-control" 
+                                                   value="{% with key=schedule.id|stringformat:"s"|add:"_"|add:student.id|stringformat:"s" %}
+                                                          {% with attendance=attendances|get_item:key %}{{ attendance.comment|default:'' }}{% endwith %}
+                                                          {% endwith %}">
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-success">Сохранить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    {% endfor %}
+{% else %}
+    <div class="alert alert-info text-center">
+        <i class="bi bi-info-circle fs-1"></i>
+        <p class="mt-3">На {{ selected_date|date:"d.m.Y" }} нет занятий</p>
+    </div>
+{% endif %}
+{% endblock %}

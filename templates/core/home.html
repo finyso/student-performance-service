@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Главная - Сервис учёта успеваемости{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-5">
+    <div class="col-md-4">
+        <div class="card h-100 text-center p-4 hover-card">
+            <div class="card-body">
+                <i class="bi bi-journal-bookmark-fill fs-1 text-primary"></i>
+                <h3 class="h5 mt-3">Электронный журнал</h3>
+                <p class="text-muted">Удобное выставление оценок, автоматический расчёт среднего балла и подробная статистика успеваемости.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 text-center p-4 hover-card">
+            <div class="card-body">
+                <i class="bi bi-calendar-check-fill fs-1 text-primary"></i>
+                <h3 class="h5 mt-3">Расписание и посещаемость</h3>
+                <p class="text-muted">Актуальное расписание занятий, учёт посещаемости и автоматические уведомления о пропусках.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 text-center p-4 hover-card">
+            <div class="card-body">
+                <i class="bi bi-graph-up fs-1 text-primary"></i>
+                <h3 class="h5 mt-3">Аналитика и рейтинг</h3>
+                <p class="text-muted">Детальная аналитика успеваемости, рейтинг студентов и наглядные графики прогресса.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h4 class="mb-0"><i class="bi bi-newspaper"></i> Последние новости</h4>
+            </div>
+            <div class="card-body">
+                {% if last_news %}
+                    {% for news in last_news %}
+                        <div class="mb-3 pb-3 {% if not forloop.last %}border-bottom{% endif %}">
+                            <h5>{{ news.title }}</h5>
+                            <small class="text-muted">{{ news.created_at|date:"d.m.Y H:i" }}</small>
+                            <p class="mt-2">{{ news.summary|truncatewords:30 }}</p>
+                            <a href="{% url 'news_detail' news.pk %}" class="btn btn-sm btn-outline-primary">Читать далее</a>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">Новостей пока нет</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h4 class="mb-0"><i class="bi bi-star-fill"></i> Возможности системы</h4>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li><i class="bi bi-check-circle-fill text-success"></i> Личные кабинеты студентов и преподавателей</li>
+                    <li><i class="bi bi-check-circle-fill text-success"></i> Система заявок и обращений</li>
+                    <li><i class="bi bi-check-circle-fill text-success"></i> Домашние задания с дедлайнами</li>
+                    <li><i class="bi bi-check-circle-fill text-success"></i> Уведомления на email</li>
+                    <li><i class="bi bi-check-circle-fill text-success"></i> Объявления</li>
+                    <li><i class="bi bi-check-circle-fill text-success"></i> Экспорт данных и отчётов</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if not user.is_authenticated %}
+<div class="row mt-5">
+    <div class="col-12 text-center">
+        <div class="card bg-primary text-white">
+            <div class="card-body py-5">
+                <h3>Готовы начать?</h3>
+                <p class="mb-4">Присоединяйтесь к нашей образовательной платформе уже сегодня</p>
+                <a href="{% url 'register' %}" class="btn btn-light btn-lg">Зарегистрироваться</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

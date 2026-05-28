@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Оценить задание{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Оценка задания: {{ assignment.title }}</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <strong>Студент:</strong> {{ submission.student.user.get_full_name }}<br>
+                    <strong>Группа:</strong> {{ submission.student.group.name }}<br>
+                    <strong>Дата сдачи:</strong> {{ submission.submitted_at|date:"d.m.Y H:i"|default:"—" }}
+                </div>
+                
+                {% if submission.content %}
+                    <div class="mb-3">
+                        <strong>Ответ студента:</strong>
+                        <div class="border rounded p-3 bg-light mt-2">
+                            {{ submission.content|linebreaks }}
+                        </div>
+                    </div>
+                {% endif %}
+                
+                {% if submission.attachment %}
+                    <div class="mb-3">
+                        <strong>Прикреплённый файл:</strong>
+                        <a href="{{ submission.attachment.url }}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-download"></i> Скачать
+                        </a>
+                    </div>
+                {% endif %}
+                
+                <hr>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Оценка (0-{{ assignment.max_score }})</label>
+                                <input type="number" name="score" class="form-control" 
+                                       value="{{ submission.score|default:'' }}" min="0" max="{{ assignment.max_score }}" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Отзыв</label>
+                        <textarea name="feedback" class="form-control" rows="5">{{ submission.feedback|default:'' }}</textarea>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'assignment_submissions' assignment.id %}" class="btn btn-secondary">Назад</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Сохранить оценку
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

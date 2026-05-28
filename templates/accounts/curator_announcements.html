@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Объявления куратора{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4"><i class="bi bi-megaphone-fill"></i> Объявления</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-5">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Новое объявление</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Группа</label>
+                        <select name="group_id" class="form-select" required>
+                            {% for group in groups %}
+                                <option value="{{ group.id }}">{{ group.name }} ({{ group.course }} курс)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Заголовок</label>
+                        <input type="text" name="title" class="form-control" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Содержание</label>
+                        <textarea name="content" class="form-control" rows="5" required></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">Опубликовать</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Последние объявления</h5>
+            </div>
+            <div class="card-body">
+                {% if announcements %}
+                    {% for announcement in announcements %}
+                        <div class="border-bottom mb-3 pb-3">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="mb-1">{{ announcement.title }}</h6>
+                                <small class="text-muted">{{ announcement.created_at|date:"d.m.Y H:i" }}</small>
+                            </div>
+                            <p class="mb-1">{{ announcement.content|truncatechars:150 }}</p>
+                            <small class="text-primary">Группа: {{ announcement.group.name }}</small>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center py-5">Нет объявлений</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

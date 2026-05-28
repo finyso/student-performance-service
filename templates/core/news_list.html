@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Новости{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4"><i class="bi bi-newspaper"></i> Новости</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        {% if news_list %}
+            {% for news in news_list %}
+                <div class="card mb-4">
+                    {% if news.image %}
+                        <img src="{{ news.image.url }}" class="card-img-top" alt="{{ news.title }}" style="max-height: 300px; object-fit: cover;">
+                    {% endif %}
+                    <div class="card-body">
+                        <h3 class="card-title">{{ news.title }}</h3>
+                        <p class="text-muted">
+                            <i class="bi bi-calendar"></i> {{ news.created_at|date:"d.m.Y H:i" }}
+                        </p>
+                        <p class="card-text">{{ news.summary }}</p>
+                        <a href="{% url 'news_detail' news.pk %}" class="btn btn-primary">Читать далее →</a>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="alert alert-info">Новостей пока нет</div>
+        {% endif %}
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">О нас</h5>
+            </div>
+            <div class="card-body">
+                <p>Сервис учёта успеваемости студентов - современная платформа для автоматизации учебного процесса.</p>
+                <hr>
+                <p><i class="bi bi-envelope"></i> info@student-performance.by</p>
+                <p><i class="bi bi-telephone"></i> +375 (17) 123-45-67</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
