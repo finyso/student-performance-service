@@ -5,7 +5,15 @@ from django.contrib.auth import login
 from django.contrib import messages
 from django.utils import timezone
 from datetime import datetime, date
-from .models import User, StudentProfile, Group, Penalty, Grade, Subject, Schedule, Attendance, Announcement
+from datetime import timedelta
+from .models import User, StudentProfile, Group, Penalty, Grade, Subject, Schedule, Attendance, Announcement, News
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import update_session_auth_hash
+from django.core.mail import send_mail
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.template.loader import render_to_string
 
 @login_required
 def profile(request):
@@ -178,13 +186,12 @@ def admin_all_grades(request):
         messages.error(request, 'Доступ запрещён')
         return redirect('home')
     
-    # Импортируем модели, если их нет в глобальном импорте
     from .models import Grade, Group, Subject, StudentProfile
     
     # Фильтры
     group_id = request.GET.get('group')
     subject_id = request.GET.get('subject')
-    student_id = request.GET.get('student')
+    student_card = request.GET.get('student_card')
     
     grades = Grade.objects.all().select_related('student__user', 'student__group', 'subject')
     
@@ -192,59 +199,113 @@ def admin_all_grades(request):
         grades = grades.filter(student__group_id=group_id)
     if subject_id:
         grades = grades.filter(subject_id=subject_id)
-    if student_id:
-        grades = grades.filter(student_id=student_id)
+    if student_card:
+        grades = grades.filter(student__student_card_number__icontains=student_card)
     
     groups = Group.objects.all()
     subjects = Subject.objects.all()
-    students = StudentProfile.objects.all()
     
     context = {
-        'grades': grades[:100],
+        'grades': grades[:200],
         'groups': groups,
         'subjects': subjects,
-        'students': students,
         'selected_group': group_id,
         'selected_subject': subject_id,
-        'selected_student': student_id,
+        'search_card': student_card,
     }
     return render(request, 'accounts/admin_all_grades.html', context)
 
 @login_required
+def admin_announcements(request):
+    """Управление объявлениями для админа"""
+    if not request.user.is_superuser:
+        messages.error(request, 'Доступ запрещён')
+        return redirect('home')
+    
+    from apps.notifications.utils import create_notification
+    
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        content = request.POST.get('content')
+        group_id = request.POST.get('group_id')
+        
+        group = get_object_or_404(Group, id=group_id)
+        
+        Announcement.objects.create(
+            title=title,
+            content=content,
+            group=group,
+            created_by=request.user
+        )
+        
+        # Уведомление всем студентам группы
+        for student in StudentProfile.objects.filter(group=group):
+            create_notification(
+                student.user,
+                'message',
+                f'Новое объявление: {title}',
+                content[:200],
+                '/announcements/'
+            )
+        
+        messages.success(request, f'Объявление "{title}" опубликовано для группы {group.name}')
+        return redirect('admin_announcements')
+    
+    groups = Group.objects.all()
+    announcements = Announcement.objects.all().order_by('-created_at')
+    
+    context = {
+        'groups': groups,
+        'announcements': announcements,
+    }
+    return render(request, 'accounts/admin_announcements.html', context)
+
+@login_required
 def admin_all_schedule(request):
-    """Просмотр расписания всех групп (для админа)"""
+    """Просмотр расписания всех групп (для админа) с переключением недель"""
     if not request.user.is_superuser:
         messages.error(request, 'Доступ запрещён')
         return redirect('home')
     
     from .models import Group, Schedule
-    from datetime import date
+    from datetime import date, timedelta
     
     group_id = request.GET.get('group')
+    week_offset = int(request.GET.get('week', 0))
     groups = Group.objects.all()
+    
+    # Вычисляем текущую дату с учётом недели
+    today = date.today()
+    current_date = today + timedelta(days=week_offset * 7)
+    
+    # Получаем даты для текущей недели
+    start_of_week = current_date - timedelta(days=current_date.weekday())
+    week_dates = {}
+    for i in range(7):
+        week_dates[i + 1] = start_of_week + timedelta(days=i)
     
     schedules = []
     selected_group = None
-    current_date = date.today()
     
     if group_id:
         selected_group = get_object_or_404(Group, id=group_id)
         schedules = Schedule.objects.filter(group=selected_group, is_active=True).select_related('subject', 'teacher').order_by('weekday', 'lesson_number')
     
-    # Получаем даты для текущей недели
-    from datetime import timedelta
-    week_dates = {}
-    start_of_week = current_date - timedelta(days=current_date.weekday())
-    for i in range(7):
-        week_dates[i + 1] = start_of_week + timedelta(days=i)
+    # Группируем расписание по дням недели
+    schedule_by_day = {i: [] for i in range(1, 7)}
+    for schedule in schedules:
+        schedule_by_day[schedule.weekday].append(schedule)
     
     context = {
         'groups': groups,
         'selected_group': selected_group,
-        'schedules': schedules,
+        'schedule_by_day': schedule_by_day,
         'weekdays': Schedule.WEEKDAYS,
         'week_dates': week_dates,
         'current_date': current_date,
+        'week_offset': week_offset,
+        'prev_week': week_offset - 1,
+        'next_week': week_offset + 1,
     }
     return render(request, 'accounts/admin_all_schedule.html', context)
 
@@ -276,39 +337,35 @@ def headman_attendance(request):
     # Получаем расписание на выбранный день
     weekday = selected_date.isoweekday()
     schedules = Schedule.objects.filter(group=group, weekday=weekday, is_active=True).order_by('lesson_number')
-    
     students_list = StudentProfile.objects.filter(group=group).order_by('user__last_name')
     
     if request.method == 'POST':
         schedule_id = request.POST.get('schedule_id')
-        if not schedule_id:
-            messages.error(request, 'Не выбран предмет')
-            return redirect('headman_attendance')
-        
-        schedule = get_object_or_404(Schedule, id=schedule_id)
-        
-        for student_item in students_list:
-            status = request.POST.get(f'status_{student_item.id}')
-            if status:
-                comment = request.POST.get(f'comment_{student_item.id}', '')
-                Attendance.objects.update_or_create(
-                    student=student_item,
-                    schedule=schedule,
-                    date=selected_date,
-                    defaults={
-                        'status': status,
-                        'marked_by': request.user,
-                        'comment': comment
-                    }
-                )
-        messages.success(request, f'Посещаемость за {selected_date.strftime("%d.%m.%Y")} сохранена')
-        return redirect('headman_attendance')
+        if schedule_id:
+            schedule = get_object_or_404(Schedule, id=schedule_id)
+            for student_item in students_list:
+                status = request.POST.get(f'status_{student_item.id}')
+                if status:
+                    comment = request.POST.get(f'comment_{student_item.id}', '')
+                    Attendance.objects.update_or_create(
+                        student=student_item,
+                        schedule=schedule,
+                        date=selected_date,
+                        defaults={
+                            'status': status,
+                            'marked_by': request.user,
+                            'comment': comment
+                        }
+                    )
+            messages.success(request, f'Посещаемость за {selected_date.strftime("%d.%m.%Y")} сохранена')
+            return redirect(f'/headman/attendance/?date={selected_date.isoformat()}')
     
-    # Получаем существующие отметки для отображения
+    # Получаем существующие отметки - ПРАВИЛЬНАЯ СТРУКТУРА
     attendances = {}
     for schedule in schedules:
+        attendances[schedule.id] = {}
         for att in Attendance.objects.filter(schedule=schedule, date=selected_date):
-            attendances[f"{schedule.id}_{att.student_id}"] = att
+            attendances[schedule.id][att.student_id] = att
     
     context = {
         'group': group,
@@ -435,7 +492,7 @@ def admin_attendance(request):
     selected_group = None
     schedules = []
     students = []
-    attendances = {}
+    attendances = {}  # {schedule_id: {student_id: attendance}}
     
     if group_id:
         selected_group = get_object_or_404(Group, id=group_id)
@@ -463,10 +520,11 @@ def admin_attendance(request):
                 messages.success(request, f'Посещаемость за {selected_date.strftime("%d.%m.%Y")} сохранена')
                 return redirect(f'/control/attendance/?group={group_id}&date={selected_date.isoformat()}')
         
-        # Получаем существующие отметки
+        # Загружаем существующие отметки
         for schedule in schedules:
+            attendances[schedule.id] = {}
             for att in Attendance.objects.filter(schedule=schedule, date=selected_date):
-                attendances[f"{schedule.id}_{att.student_id}"] = att
+                attendances[schedule.id][att.student_id] = att
     
     context = {
         'groups': groups,
@@ -478,3 +536,77 @@ def admin_attendance(request):
         'status_choices': Attendance.STATUS_CHOICES,
     }
     return render(request, 'accounts/admin_attendance.html', context)
+
+@login_required
+def admin_news(request):
+    """Управление новостями для админа"""
+    if not request.user.is_superuser:
+        messages.error(request, 'Доступ запрещён')
+        return redirect('home')
+    
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        summary = request.POST.get('summary')
+        content = request.POST.get('content')
+        is_published = request.POST.get('is_published') == 'on'
+        
+        News.objects.create(
+            title=title,
+            summary=summary,
+            content=content,
+            is_published=is_published
+        )
+        messages.success(request, f'Новость "{title}" создана')
+        return redirect('admin_news')
+    
+    news_list = News.objects.all().order_by('-created_at')
+    
+    context = {
+        'news_list': news_list,
+    }
+    return render(request, 'accounts/admin_news.html', context)
+
+@login_required
+def profile_edit(request):
+    """Редактирование профиля пользователя"""
+    user = request.user
+    
+    if request.method == 'POST':
+        user.email = request.POST.get('email', user.email)
+        user.phone_number = request.POST.get('phone_number', user.phone_number)
+        user.address = request.POST.get('address', user.address)
+        
+        date_of_birth_str = request.POST.get('date_of_birth')
+        if date_of_birth_str:
+            from datetime import datetime
+            user.date_of_birth = datetime.strptime(date_of_birth_str, '%Y-%m-%d').date()
+        
+        if request.FILES.get('avatar'):
+            user.avatar = request.FILES.get('avatar')
+        
+        user.save()
+        messages.success(request, 'Профиль успешно обновлён')
+        return redirect('profile')
+    
+    context = {
+        'user': user,
+    }
+    return render(request, 'accounts/profile_edit.html', context)
+
+@login_required
+def change_password(request):
+    """Изменение пароля пользователя"""
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # Сохраняем сессию
+            messages.success(request, 'Пароль успешно изменён!')
+            return redirect('profile')
+        else:
+            for error in form.errors.values():
+                messages.error(request, error)
+    else:
+        form = PasswordChangeForm(request.user)
+    
+    return render(request, 'accounts/change_password.html', {'form': form})

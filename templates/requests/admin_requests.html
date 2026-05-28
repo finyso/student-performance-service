@@ -14,7 +14,7 @@
         <div class="card">
             <div class="card-body">
                 <form method="get" class="row g-3">
-                    <div class="col-md-4">
+                    <div class="col-md-5">
                         <select name="status" class="form-select">
                             <option value="">Все статусы</option>
                             {% for value, label in status_choices %}
@@ -24,7 +24,7 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-5">
                         <select name="type" class="form-select">
                             <option value="">Все типы</option>
                             {% for value, label in request_types %}
@@ -34,7 +34,7 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-2">
                         <button type="submit" class="btn btn-primary w-100">Фильтровать</button>
                     </div>
                 </form>
@@ -53,7 +53,7 @@
                             <thead>
                                 <tr>
                                     <th>ID</th>
-                                    <th>Студент</th>
+                                    <th>Пользователь</th>
                                     <th>Тип</th>
                                     <th>Заголовок</th>
                                     <th>Дата</th>
@@ -65,7 +65,15 @@
                                 {% for req in requests %}
                                     <tr>
                                         <td>#{{ req.id }}</td>
-                                        <td>{{ req.student.user.get_full_name }}</td>
+                                        <td>
+                                            {% if req.student %}
+                                                {{ req.student.user.get_full_name }} (студент)
+                                            {% elif req.teacher %}
+                                                {{ req.teacher.user.get_full_name }} (преподаватель)
+                                            {% else %}
+                                                {{ req.created_by.get_full_name }}
+                                            {% endif %}
+                                        </td>
                                         <td>{{ req.get_request_type_display }}</td>
                                         <td>{{ req.title|truncatechars:50 }}</td>
                                         <td>{{ req.created_at|date:"d.m.Y" }}</td>

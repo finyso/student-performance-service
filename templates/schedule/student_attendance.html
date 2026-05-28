@@ -64,6 +64,7 @@
                         <th>Дата</th>
                         <th>Предмет</th>
                         <th>Преподаватель</th>
+                        <th>Пара</th>
                         <th>Статус</th>
                         <th>Комментарий</th>
                     </tr>
@@ -71,11 +72,14 @@
                 <tbody>
                     {% for att in attendances %}
                         <tr>
-                            <td>{{ att.date|date:"d.m.Y" }} ({{ att.date|date:"l" }})</td>
-                            <td>{{ att.schedule.subject.name }}<br>
-                                <small class="text-muted">{{ att.schedule.lesson_number }} пара</small>
+                            <td>{{ att.date|date:"d.m.Y" }}<br>
+                                <small class="text-muted">{{ att.date|date:"l" }}</small>
                             </td>
+                            <td>{{ att.schedule.subject.name }}</strong>}
                             <td>{{ att.schedule.teacher.last_name }} {{ att.schedule.teacher.first_name|slice:":1" }}.</td>
+                            <td>{{ att.schedule.lesson_number }} пара<br>
+                                <small>{{ att.schedule.start_time|time:"H:i" }} - {{ att.schedule.end_time|time:"H:i" }}</small>
+                            </td>
                             <td>
                                 <span class="badge bg-{{ att.get_status_color }}">
                                     {{ att.get_status_display }}

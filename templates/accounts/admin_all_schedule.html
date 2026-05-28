@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 
 {% block title %}Расписание групп{% endblock %}
 
@@ -13,18 +14,17 @@
     <div class="col-md-6 mx-auto">
         <div class="card">
             <div class="card-body">
-                <form method="get">
-                    <div class="input-group">
-                        <select name="group" class="form-select" required>
-                            <option value="">Выберите группу</option>
-                            {% for group in groups %}
-                                <option value="{{ group.id }}" {% if selected_group and selected_group.id == group.id %}selected{% endif %}>
-                                    {{ group.name }} ({{ group.course }} курс)
-                                </option>
-                            {% endfor %}
-                        </select>
-                        <button type="submit" class="btn btn-primary">Показать</button>
-                    </div>
+                <form method="get" class="d-flex gap-2">
+                    <select name="group" class="form-select" required>
+                        <option value="">Выберите группу</option>
+                        {% for group in groups %}
+                            <option value="{{ group.id }}" {% if selected_group and selected_group.id == group.id %}selected{% endif %}>
+                                {{ group.name }} ({{ group.course }} курс)
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <input type="hidden" name="week" value="{{ week_offset }}">
+                    <button type="submit" class="btn btn-primary">Показать</button>
                 </form>
             </div>
         </div>
@@ -32,46 +32,61 @@
 </div>
 
 {% if selected_group %}
-<div class="row">
+<div class="row mb-4">
     <div class="col-12">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">{{ selected_group.name }} - Расписание занятий</h5>
+        <div class="d-flex justify-content-between align-items-center">
+            <h4>{{ selected_group.name }} - Расписание занятий</h4>
+            <div>
+                <a href="?group={{ selected_group.id }}&week={{ prev_week }}" class="btn btn-outline-primary">
+                    <i class="bi bi-chevron-left"></i> Предыдущая неделя
+                </a>
+                <a href="?group={{ selected_group.id }}&week=0" class="btn btn-outline-secondary mx-2">Текущая неделя</a>
+                <a href="?group={{ selected_group.id }}&week={{ next_week }}" class="btn btn-outline-primary">
+                    Следующая неделя <i class="bi bi-chevron-right"></i>
+                </a>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    {% for weekday_num, weekday_name in weekdays %}
-                        <div class="col-md-2 mb-3">
-                            <div class="card h-100">
-                                <div class="card-header bg-secondary text-white text-center">
-                                    <strong>{{ weekday_name }}</strong>
-                                    <small>{{ current_date|date:"d.m.Y" }}</small>
+        </div>
+        <p class="text-muted mt-2">Неделя от {{ current_date|date:"d.m.Y" }}</p>
+    </div>
+</div>
+
+<div class="row">
+    {% for weekday_num, weekday_name in weekdays %}
+        <div class="col-md-2 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white text-center">
+                    <strong>{{ weekday_name }}</strong>
+                    {% with week_dates|get_item:weekday_num as date_obj %}
+                        {% if date_obj %}
+                            <br><small>{{ date_obj|date:"d.m.Y" }}</small>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+                <div class="card-body p-2">
+                    {% with schedule_by_day|get_item:weekday_num as schedules %}
+                        {% if schedules %}
+                            {% for schedule in schedules %}
+                                <div class="schedule-item mb-2 p-2 border rounded">
+                                    <small class="text-muted">{{ schedule.lesson_number }} пара</small>
+                                    <div class="fw-bold">{{ schedule.subject.name }}</div>
+                                    <small>{{ schedule.start_time|time:"H:i" }} - {{ schedule.end_time|time:"H:i" }}</small>
+                                    <div class="text-muted small">
+                                        <i class="bi bi-door-closed"></i> {{ schedule.classroom }}
+                                    </div>
+                                    <small>{{ schedule.teacher.last_name }} {{ schedule.teacher.first_name|slice:":1" }}.</small>
                                 </div>
-                                <div class="card-body p-2">
-                                    {% for schedule in schedules %}
-                                        {% if schedule.weekday == weekday_num %}
-                                            <div class="schedule-item mb-2 p-2 border rounded">
-                                                <small class="text-muted">{{ schedule.lesson_number }} пара</small>
-                                                <div class="fw-bold">{{ schedule.subject.name }}</div>
-                                                <small>{{ schedule.start_time|time:"H:i" }} - {{ schedule.end_time|time:"H:i" }}</small>
-                                                <div class="text-muted small">{{ schedule.classroom }}</div>
-                                                <small>{{ schedule.teacher.last_name }} {{ schedule.teacher.first_name|slice:":1" }}.</small>
-                                            </div>
-                                        {% endif %}
-                                    {% empty %}
-                                        <div class="text-center text-muted py-3">
-                                            <i class="bi bi-calendar-x"></i>
-                                            <div class="small">Нет занятий</div>
-                                        </div>
-                                    {% endfor %}
-                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center text-muted py-3">
+                                <i class="bi bi-calendar-x"></i>
+                                <div class="small">Нет занятий</div>
                             </div>
-                        </div>
-                    {% endfor %}
+                        {% endif %}
+                    {% endwith %}
                 </div>
             </div>
         </div>
-    </div>
+    {% endfor %}
 </div>
 {% endif %}
 {% endblock %}

@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Управление новостями{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4"><i class="bi bi-newspaper"></i> Управление новостями</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-5">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Добавить новость</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Заголовок</label>
+                        <input type="text" name="title" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Краткое описание</label>
+                        <input type="text" name="summary" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Содержание</label>
+                        <textarea name="content" class="form-control" rows="5" required></textarea>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" name="is_published" class="form-check-input" id="is_published" checked>
+                        <label class="form-check-label" for="is_published">Опубликовать</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Добавить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Список новостей</h5>
+            </div>
+            <div class="card-body">
+                {% if news_list %}
+                    <div class="list-group">
+                        {% for news in news_list %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between">
+                                    <strong>{{ news.title }}</strong>
+                                    <small class="text-muted">{{ news.created_at|date:"d.m.Y" }}</small>
+                                </div>
+                                <p class="mb-1 small">{{ news.summary|truncatechars:100 }}</p>
+                                <span class="badge {% if news.is_published %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {% if news.is_published %}Опубликовано{% else %}Черновик{% endif %}
+                                </span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">Нет новостей</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -556,6 +556,12 @@
                         <a href="{% url 'profile' %}">
                             <i class="bi bi-person"></i> Мой профиль
                         </a>
+                        <a href="{% url 'profile_edit' %}">
+                            <i class="bi bi-pencil-square"></i> Редактировать профиль
+                        </a>
+                        <a href="{% url 'change_password' %}">
+                            <i class="bi bi-key"></i> Сменить пароль
+                        </a>
                         <form action="{% url 'logout' %}" method="post">
                             {% csrf_token %}
                             <button type="submit">
@@ -695,6 +701,12 @@
                             <span>Задания</span>
                         </a>
                     </li>
+                    <li>
+                        <a href="{% url 'requests_list' %}">
+                            <i class="bi bi-envelope"></i>
+                            <span>Заявки</span>
+                        </a>
+                    </li>
                 {% elif user.role == 'curator' %}
                     <li>
                         <a href="{% url 'schedule_view' %}">
@@ -751,6 +763,18 @@
                             <span>Django Admin</span>
                         </a>
                     </li>
+                    <li>
+                        <a href="{% url 'admin_news' %}">
+                            <i class="bi bi-newspaper"></i>
+                            <span>Управление новостями</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'admin_announcements' %}">
+                            <i class="bi bi-megaphone-fill"></i>
+                            <span>Объявления</span>
+                        </a>
+                    </li>
                 {% endif %}
                 {% if user.role == 'headman' %}
                     <li>
@@ -784,6 +808,12 @@
                         {% if unread_count > 0 %}
                             <span class="badge-notification">{{ unread_count }}</span>
                         {% endif %}
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'chat_list' %}">
+                        <i class="bi bi-chat-dots-fill"></i>
+                        <span>Чаты</span>
                     </a>
                 </li>
             {% endif %}
@@ -846,6 +876,81 @@
                 });
             }
         });
+
+        // WebSocket для уведомлений
+        let notificationSocket = null;
+        
+        function connectNotificationSocket() {
+            if (notificationSocket && notificationSocket.readyState === WebSocket.OPEN) {
+                return;
+            }
+            
+            const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            notificationSocket = new WebSocket(
+                protocol + window.location.host + '/ws/notifications/'
+            );
+            
+            notificationSocket.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+                if (data.type === 'unread_count') {
+                    updateUnreadCount(data.count);
+                } else if (data.type === 'notification') {
+                    showToast(data.title, data.message);
+                    const currentCount = parseInt(document.querySelector('.badge-notification')?.innerText || '0');
+                    updateUnreadCount(currentCount + 1);
+                }
+            };
+            
+            notificationSocket.onclose = function(e) {
+                setTimeout(connectNotificationSocket, 3000);
+            };
+            
+            notificationSocket.onerror = function(e) {
+                console.log('WebSocket error, will reconnect');
+            };
+        }
+        
+        function updateUnreadCount(count) {
+            const badge = document.querySelector('.badge-notification');
+            if (badge) {
+                if (count > 0) {
+                    badge.innerText = count;
+                    badge.style.display = 'inline-block';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+        
+        function showToast(title, message) {
+            const toastHtml = `
+                <div class="toast align-items-center text-white bg-primary border-0 position-fixed bottom-0 end-0 m-3" role="alert" style="z-index: 1100;">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <strong>${escapeHtml(title)}</strong><br>
+                            ${escapeHtml(message)}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+            const container = document.createElement('div');
+            container.innerHTML = toastHtml;
+            document.body.appendChild(container);
+            const toast = new bootstrap.Toast(container.querySelector('.toast'));
+            toast.show();
+            setTimeout(() => container.remove(), 5000);
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Проверка через сессию - запускаем всегда, а сервер сам проверит
+        // WebSocket сам обработает ошибку, если пользователь не авторизован
+        //connectNotificationSocket();
     </script>
     
     {% block extra_js %}{% endblock %}

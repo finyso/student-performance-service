@@ -1,0 +1,15 @@
+{% if users %}
+    <div class="list-group">
+        {% for user in users %}
+            <a href="{% url 'chat_room' user.id %}" class="list-group-item list-group-item-action">
+                <strong>{{ user.name }}</strong>
+                <small class="text-muted d-block">{{ user.get_role_display|default:user.role }}</small>
+                {% if user.group %}
+                    <small class="text-muted">{{ user.group }}</small>
+                {% endif %}
+            </a>
+        {% endfor %}
+    </div>
+{% else %}
+    <p class="text-muted text-center">Нет доступных пользователей для чата</p>
+{% endif %}

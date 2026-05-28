@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}Чат с {{ other_user.get_full_name }}{% endblock %}
+
+{% block content %}
+<input type="hidden" id="room-id" value="{{ room.id }}">
+<input type="hidden" id="current-username" value="{{ user.username }}">
+<input type="hidden" id="current-fullname" value="{{ user.get_full_name }}">
+
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="bi bi-chat-dots-fill"></i> 
+            Чат с {{ other_user.get_full_name }}
+            <small class="text-muted">({{ other_user.get_role_display }})</small>
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>{{ other_user.get_full_name }}</span>
+                    <a href="{% url 'chat_list' %}" class="btn btn-sm btn-light">← Назад</a>
+                </div>
+            </div>
+            <div class="card-body" id="chat-messages" style="height: 400px; overflow-y: auto;">
+                {% for message in messages %}
+                    <div class="mb-3 {% if message.sender == user %}text-end{% endif %}">
+                        <div class="d-inline-block p-2 rounded {% if message.sender == user %}bg-primary text-white{% else %}bg-light{% endif %}" style="max-width: 70%;">
+                            <small class="d-block {% if message.sender == user %}text-white-50{% else %}text-muted{% endif %}">
+                                {{ message.sender.get_full_name }} • {{ message.created_at|date:"H:i" }}
+                            </small>
+                            {{ message.content|linebreaksbr }}
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-chat-dots fs-1"></i>
+                        <p>Нет сообщений. Напишите что-нибудь!</p>
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="card-footer">
+                <form id="chat-form" class="d-flex gap-2">
+                    {% csrf_token %}
+                    <input type="text" id="chat-input" class="form-control" placeholder="Введите сообщение..." autocomplete="off">
+                    <button type="submit" class="btn btn-primary">Отправить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const roomId = document.getElementById('room-id').value;
+    const currentUsername = document.getElementById('current-username').value;
+    const currentFullname = document.getElementById('current-fullname').value;
+    
+    if (roomId && roomId !== 'None') {
+        const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+        const chatSocket = new WebSocket(protocol + window.location.host + '/ws/chat/' + roomId + '/');
+        
+        chatSocket.onopen = function(e) {
+            console.log('WebSocket connected');
+        };
+        
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            if (data.type === 'message') {
+                const messagesDiv = document.getElementById('chat-messages');
+                const isMe = (data.sender === currentUsername);
+                const messageHtml = `
+                    <div class="mb-3 ${isMe ? 'text-end' : ''}">
+                        <div class="d-inline-block p-2 rounded ${isMe ? 'bg-primary text-white' : 'bg-light'}" style="max-width: 70%;">
+                            <small class="d-block ${isMe ? 'text-white-50' : 'text-muted'}">
+                                ${escapeHtml(data.sender_fullname)} • ${escapeHtml(data.timestamp)}
+                            </small>
+                            ${escapeHtml(data.message).replace(/\n/g, '<br>')}
+                        </div>
+                    </div>
+                `;
+                messagesDiv.insertAdjacentHTML('beforeend', messageHtml);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }
+        };
+        
+        chatSocket.onclose = function(e) {
+            console.log('WebSocket disconnected');
+        };
+        
+        document.getElementById('chat-form').onsubmit = function(e) {
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            if (message) {
+                chatSocket.send(JSON.stringify({
+                    'message': message
+                }));
+                input.value = '';
+            }
+        };
+    } else {
+        console.log('Invalid room ID');
+    }
+    
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    const messagesDiv = document.getElementById('chat-messages');
+    if (messagesDiv) {
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+</script>
+{% endblock %}

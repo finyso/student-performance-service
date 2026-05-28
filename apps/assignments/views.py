@@ -6,6 +6,8 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from apps.accounts.models import Assignment, AssignmentSubmission, Subject, StudentProfile
 from apps.notifications.utils import create_notification
+from celery import shared_task
+from datetime import timedelta
 
 @login_required
 def assignments_list(request):
@@ -41,6 +43,67 @@ def assignments_list(request):
     }
     return render(request, 'assignments/student_list.html', context)
 
+@shared_task
+def check_assignment_deadlines():
+    """Проверка дедлайнов заданий и отправка уведомлений"""
+    from apps.accounts.models import Assignment, AssignmentSubmission
+    
+    today = timezone.now().date()
+    tomorrow = today + timedelta(days=1)
+    
+    # Задания, у которых дедлайн завтра
+    upcoming_deadlines = Assignment.objects.filter(
+        deadline__date=tomorrow,
+        is_active=True
+    )
+    
+    for assignment in upcoming_deadlines:
+        # Получаем всех студентов группы
+        groups = assignment.subject.groups.all()
+        for group in groups:
+            for student in group.students.all():
+                # Проверяем, сдал ли студент задание
+                has_submitted = AssignmentSubmission.objects.filter(
+                    assignment=assignment,
+                    student=student,
+                    status__in=['submitted', 'graded']
+                ).exists()
+                
+                if not has_submitted:
+                    create_notification(
+                        student.user,
+                        'deadline',
+                        f'Скоро дедлайн: {assignment.title}',
+                        f'Дедлайн задания "{assignment.title}" наступает завтра в {assignment.deadline.strftime("%H:%M")}. Успейте сдать!',
+                        f'/assignments/{assignment.id}/',
+                        send_email=True
+                    )
+    
+    # Просроченные задания (дедлайн сегодня до текущего времени)
+    today_deadlines = Assignment.objects.filter(
+        deadline__date=today,
+        deadline__lte=timezone.now(),
+        is_active=True
+    )
+    
+    for assignment in today_deadlines:
+        for group in assignment.subject.groups.all():
+            for student in group.students.all():
+                has_submitted = AssignmentSubmission.objects.filter(
+                    assignment=assignment,
+                    student=student,
+                    status__in=['submitted', 'graded']
+                ).exists()
+                
+                if not has_submitted:
+                    create_notification(
+                        student.user,
+                        'deadline',
+                        f'Просрочен дедлайн: {assignment.title}',
+                        f'Дедлайн задания "{assignment.title}" уже прошёл. Задание больше не принимается.',
+                        f'/assignments/{assignment.id}/',
+                        send_email=True
+                    )
 
 @login_required
 def assignment_detail(request, assignment_id):
@@ -154,7 +217,6 @@ def teacher_assignments(request):
     }
     return render(request, 'assignments/teacher_list.html', context)
 
-
 @login_required
 def assignment_create(request):
     """Создание нового задания преподавателем"""
@@ -166,12 +228,16 @@ def assignment_create(request):
         title = request.POST.get('title')
         description = request.POST.get('description')
         subject_id = request.POST.get('subject')
-        deadline = request.POST.get('deadline')
+        deadline_str = request.POST.get('deadline')  # строка из формы
         max_score = request.POST.get('max_score', 10)
         priority = request.POST.get('priority', 'medium')
         attachment = request.FILES.get('attachment')
         
         subject = get_object_or_404(Subject, id=subject_id)
+        
+        # Преобразуем строку в datetime
+        from datetime import datetime
+        deadline = datetime.strptime(deadline_str, '%Y-%m-%dT%H:%M')
         
         # Проверка, что преподаватель ведёт этот предмет
         if not request.user.is_superuser and subject.teacher != request.user:
@@ -189,6 +255,17 @@ def assignment_create(request):
             attachment=attachment
         )
         
+        # Уведомление студентам группы
+        from apps.notifications.utils import notify_students_in_group
+        for group in subject.groups.all():
+            notify_students_in_group(
+                group,
+                'deadline',
+                f'Новое задание: {title}',
+                f'Дедлайн: {deadline.strftime("%d.%m.%Y %H:%M")}\n\n{description[:200]}',
+                f'/assignments/{assignment.id}/'
+            )
+        
         messages.success(request, f'Задание "{title}" создано')
         return redirect('teacher_assignments')
     
@@ -203,7 +280,6 @@ def assignment_create(request):
         'priorities': Assignment.PRIORITY_CHOICES,
     }
     return render(request, 'assignments/assignment_form.html', context)
-
 
 @login_required
 def assignment_edit(request, assignment_id):

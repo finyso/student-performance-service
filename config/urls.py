@@ -12,7 +12,8 @@ urlpatterns = [
     path('', include('apps.requests_app.urls')),
     path('', include('apps.notifications.urls')),
     path('', include('apps.assignments.urls')),
-    path('', include('apps.analytics.urls')),  # Добавлено
+    path('', include('apps.analytics.urls')),
+    path('', include('apps.chat.urls')),
 ]
 
 if settings.DEBUG:

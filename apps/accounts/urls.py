@@ -9,6 +9,8 @@ urlpatterns = [
     path('login/', LoginView.as_view(template_name='registration/login.html'), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
     path('rating/', views.rating_list, name='rating_list'),
+    path('profile/edit/', views.profile_edit, name='profile_edit'),
+    path('change-password/', views.change_password, name='change_password'),
     
     # Student
     path('my-group/', views.group_list, name='group_list'),
@@ -27,4 +29,6 @@ urlpatterns = [
     path('control/all-grades/', views.admin_all_grades, name='admin_all_grades'),
     path('control/all-schedule/', views.admin_all_schedule, name='admin_all_schedule'),
     path('control/attendance/', views.admin_attendance, name='admin_attendance'),
+    path('control/news/', views.admin_news, name='admin_news'),
+    path('control/announcements/', views.admin_announcements, name='admin_announcements'),
 ]

@@ -6,33 +6,8 @@ from apps.notifications.utils import notify_about_request_status
 from apps.accounts.models import Request, StudentProfile
 
 @login_required
-def requests_list(request):
-    """Список заявок студента"""
-    if not hasattr(request.user, 'student_profile'):
-        messages.error(request, 'Только студенты могут просматривать заявки')
-        return redirect('home')
-    
-    student = request.user.student_profile
-    requests_list = Request.objects.filter(student=student).order_by('-created_at')
-    
-    paginator = Paginator(requests_list, 10)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    
-    context = {
-        'requests': page_obj,
-        'request_types': Request.REQUEST_TYPES,
-    }
-    return render(request, 'requests/requests_list.html', context)
-
-
-@login_required
 def request_create(request):
     """Создание новой заявки"""
-    if not hasattr(request.user, 'student_profile'):
-        messages.error(request, 'Только студенты могут создавать заявки')
-        return redirect('home')
-    
     if request.method == 'POST':
         request_type = request.POST.get('request_type')
         title = request.POST.get('title')
@@ -42,23 +17,60 @@ def request_create(request):
             messages.error(request, 'Пожалуйста, заполните все поля')
             return redirect('request_create')
         
-        new_request = Request.objects.create(
-            student=request.user.student_profile,
-            request_type=request_type,
-            title=title,
-            description=description,
-            created_by=request.user,
-            status='pending'
-        )
+        # Создаём заявку в зависимости от роли
+        if hasattr(request.user, 'student_profile'):
+            new_request = Request.objects.create(
+                student=request.user.student_profile,
+                request_type=request_type,
+                title=title,
+                description=description,
+                created_by=request.user,
+                status='pending'
+            )
+        elif hasattr(request.user, 'teacher_profile'):
+            new_request = Request.objects.create(
+                teacher=request.user.teacher_profile,
+                request_type=request_type,
+                title=title,
+                description=description,
+                created_by=request.user,
+                status='pending'
+            )
+        else:
+            messages.error(request, 'Вы не можете создавать заявки')
+            return redirect('home')
         
         messages.success(request, f'Заявка #{new_request.id} успешно создана')
         return redirect('requests_list')
     
+    # Получаем доступные типы заявок для пользователя
+    available_types = Request.get_request_types_for_user(request.user)
+    
     context = {
-        'request_types': Request.REQUEST_TYPES,
+        'request_types': available_types,
     }
     return render(request, 'requests/request_create.html', context)
 
+
+@login_required
+def requests_list(request):
+    """Список заявок пользователя"""
+    if hasattr(request.user, 'student_profile'):
+        requests_list = Request.objects.filter(student=request.user.student_profile).order_by('-created_at')
+    elif hasattr(request.user, 'teacher_profile'):
+        requests_list = Request.objects.filter(teacher=request.user.teacher_profile).order_by('-created_at')
+    else:
+        requests_list = []
+    
+    paginator = Paginator(requests_list, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'requests': page_obj,
+        'request_types': Request.get_request_types_for_user(request.user),
+    }
+    return render(request, 'requests/requests_list.html', context)
 
 @login_required
 def request_detail(request, request_id):
@@ -76,18 +88,11 @@ def request_detail(request, request_id):
     
     return render(request, 'requests/request_detail.html', {'request': req})
 
-
 @login_required
 def admin_requests(request):
     """Управление заявками для администратора/преподавателя"""
-    # Проверяем права доступа
-    if not request.user.is_authenticated:
-        messages.error(request, 'Пожалуйста, войдите в систему')
-        return redirect('login')
-    
-    # Разрешаем доступ только суперпользователям и преподавателям
     if not (request.user.is_superuser or request.user.role == 'teacher'):
-        messages.error(request, 'У вас недостаточно прав для просмотра этой страницы')
+        messages.error(request, 'Доступ запрещён')
         return redirect('home')
     
     status_filter = request.GET.get('status', '')
@@ -104,12 +109,17 @@ def admin_requests(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
+    # Используем STATUS_CHOICES из модели, а не REQUEST_TYPES
+    from apps.accounts.models import Request as RequestModel
+    status_choices = RequestModel.STATUS_CHOICES
+    request_types = RequestModel.STUDENT_REQUEST_TYPES + RequestModel.TEACHER_REQUEST_TYPES + RequestModel.COMMON_REQUEST_TYPES
+    
     context = {
         'requests': page_obj,
         'status_filter': status_filter,
         'type_filter': type_filter,
-        'status_choices': Request.STATUS_CHOICES,
-        'request_types': Request.REQUEST_TYPES,
+        'status_choices': status_choices,
+        'request_types': request_types,
     }
     return render(request, 'requests/admin_requests.html', context)
 

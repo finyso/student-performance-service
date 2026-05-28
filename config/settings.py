@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'apps.requests_app',
     'apps.notifications',
     'apps.analytics',
+    'apps.chat',
 ]
 
 MIDDLEWARE = [
@@ -162,20 +163,11 @@ CELERY_TIMEZONE = TIME_ZONE
 # Channels settings
 CHANNEL_LAYERS = {
     'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            'hosts': [('127.0.0.1', 6379)],
-        },
-    },
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    }
 }
 
-# Email settings
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = ''
-EMAIL_HOST_PASSWORD = ''
+NOTIFICATION_WS_GROUP = 'notifications'
 
 # Logging
 LOGGING = {

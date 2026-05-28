@@ -25,63 +25,59 @@
 
 {% if schedules %}
     {% for schedule in schedules %}
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">
-                    {{ schedule.lesson_number }} пара: {{ schedule.subject.name }}
-                    ({{ schedule.start_time|time:"H:i" }} - {{ schedule.end_time|time:"H:i" }})
-                </h5>
-            </div>
-            <div class="card-body">
-                <form method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="schedule_id" value="{{ schedule.id }}">
-                    
-                    <div class="table-responsive">
-                        <table class="table table-bordered">
-                            <thead class="table-light">
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                {{ schedule.lesson_number }} пара: {{ schedule.subject.name }}
+                ({{ schedule.start_time|time:"H:i" }} - {{ schedule.end_time|time:"H:i" }})
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="schedule_id" value="{{ schedule.id }}">
+                
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Студент</th>
+                                <th>Статус</th>
+                                <th>Комментарий</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
                                 <tr>
-                                    <th>Студент</th>
-                                    <th>Статус</th>
-                                    <th>Комментарий</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for student in students %}
-                                    <tr>
-                                        <td>{{ student.user.last_name }} {{ student.user.first_name }}</td>
-                                        <td width="200">
-                                            <select name="status_{{ student.id }}" class="form-select">
-                                                {% for value, label in status_choices %}
-                                                    <option value="{{ value }}" 
-                                                        {% with key=schedule.id|stringformat:"s"|add:"_"|add:student.id|stringformat:"s" %}
-                                                            {% with attendance=attendances|get_item:key %}
-                                                                {% if attendance and attendance.status == value %}selected{% endif %}
-                                                            {% endwith %}
-                                                        {% endwith %}>
+                                    <td>{{ student.user.last_name }} {{ student.user.first_name }}</td>
+                                    <td width="200">
+                                        <select name="status_{{ student.id }}" class="form-select">
+                                            {% for value, label in status_choices %}
+                                                {% with attendance=attendances|get_item:schedule.id|get_item:student.id %}
+                                                    <option value="{{ value }}" {% if attendance and attendance.status == value %}selected{% endif %}>
                                                         {{ label }}
                                                     </option>
-                                                {% endfor %}
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <input type="text" name="comment_{{ student.id }}" class="form-control" 
-                                                   value="{% with key=schedule.id|stringformat:"s"|add:"_"|add:student.id|stringformat:"s" %}
-                                                          {% with attendance=attendances|get_item:key %}{{ attendance.comment|default:'' }}{% endwith %}
-                                                          {% endwith %}">
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <div class="text-end">
-                        <button type="submit" class="btn btn-success">Сохранить</button>
-                    </div>
-                </form>
-            </div>
+                                                {% endwith %}
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                    <td>
+                                        {% with attendance=attendances|get_item:schedule.id|get_item:student.id %}
+                                            <input type="text" name="comment_{{ student.id }}" class="form-control" value="{{ attendance.comment|default:'' }}">
+                                        {% endwith %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="text-end mt-3">
+                    <button type="submit" class="btn btn-success">Сохранить</button>
+                </div>
+            </form>
         </div>
+    </div>
     {% endfor %}
 {% else %}
     <div class="alert alert-info text-center">

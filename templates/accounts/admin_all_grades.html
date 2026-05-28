@@ -14,7 +14,7 @@
         <div class="card">
             <div class="card-body">
                 <form method="get" class="row g-3">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <select name="group" class="form-select">
                             <option value="">Все группы</option>
                             {% for group in groups %}
@@ -24,7 +24,7 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <select name="subject" class="form-select">
                             <option value="">Все предметы</option>
                             {% for subject in subjects %}
@@ -34,7 +34,10 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
+                        <input type="text" name="student_card" class="form-control" placeholder="Номер студенческого" value="{{ search_card|default:'' }}">
+                    </div>
+                    <div class="col-md-3">
                         <button type="submit" class="btn btn-primary w-100">Фильтровать</button>
                     </div>
                 </form>
@@ -52,6 +55,7 @@
                         <thead>
                             <tr>
                                 <th>Студент</th>
+                                <th>Студ. билет</th>
                                 <th>Группа</th>
                                 <th>Предмет</th>
                                 <th>Оценка</th>
@@ -63,6 +67,7 @@
                             {% for grade in grades %}
                                 <tr>
                                     <td>{{ grade.student.user.last_name }} {{ grade.student.user.first_name }}</td>
+                                    <td>{{ grade.student.student_card_number|default:"—" }}</td>
                                     <td>{{ grade.student.group.name|default:"—" }}</td>
                                     <td>{{ grade.subject.name }}</td>
                                     <td><span class="badge bg-primary">{{ grade.value }}</span></td>

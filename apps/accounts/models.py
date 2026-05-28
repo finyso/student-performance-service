@@ -324,7 +324,6 @@ class Schedule(models.Model):
     def __str__(self):
         return f"{self.group.name} - {self.subject.name} ({self.get_weekday_display()}, {self.lesson_number} пара)"
 
-
 class Attendance(models.Model):
     """Посещаемость студентов"""
     
@@ -346,13 +345,12 @@ class Attendance(models.Model):
     class Meta:
         verbose_name = 'Посещаемость'
         verbose_name_plural = 'Посещаемость'
-        unique_together = ['student', 'schedule', 'date']
+        unique_together = ['student', 'schedule', 'date']  # ЭТО ДОЛЖНО БЫТЬ ЗДЕСЬ, а не в Notification
     
     def __str__(self):
         return f"{self.student.user.get_full_name()} - {self.date} ({self.get_status_display()})"
     
     def get_status_color(self):
-        """Цвет статуса для отображения"""
         colors = {
             'present': 'success',
             'absent': 'danger',
@@ -364,18 +362,9 @@ class Attendance(models.Model):
 # ========== МОДЕЛИ ДЛЯ ЗАЯВОК ==========
 
 class Request(models.Model):
-    """Заявки студентов"""
+    """Заявки студентов и преподавателей"""
     
-    REQUEST_TYPES = [
-        ('certificate', 'Справка об обучении'),
-        ('reschedule', 'Перенос занятия'),
-        ('academic_certificate', 'Академическая справка'),
-        ('grade_correction', 'Исправление оценки'),
-        ('excused_absence', 'Пропуск по уважительной причине'),
-        ('technical', 'Техническая проблема'),
-        ('other', 'Другое'),
-    ]
-    
+    # Статусы заявок (общие для всех)
     STATUS_CHOICES = [
         ('pending', 'Создана'),
         ('processing', 'В обработке'),
@@ -384,8 +373,36 @@ class Request(models.Model):
         ('completed', 'Выполнена'),
     ]
     
-    student = models.ForeignKey('StudentProfile', on_delete=models.CASCADE, related_name='requests', verbose_name='Студент')
-    request_type = models.CharField(max_length=30, choices=REQUEST_TYPES, verbose_name='Тип заявки')
+    # Типы заявок для студентов
+    STUDENT_REQUEST_TYPES = [
+        ('certificate', 'Справка об обучении'),
+        ('academic_certificate', 'Академическая справка'),
+        ('grade_correction', 'Исправление оценки'),
+        ('excused_absence', 'Пропуск по уважительной причине'),
+        ('financial_aid', 'Материальная помощь'),
+        ('dormitory', 'Общежитие'),
+    ]
+    
+    # Типы заявок для преподавателей
+    TEACHER_REQUEST_TYPES = [
+        ('vacation', 'Отпуск'),
+        ('sick_leave', 'Больничный'),
+        ('equipment', 'Ремонт оборудования'),
+        ('technical', 'Техническая проблема'),
+        ('reschedule', 'Перенос занятия'),
+        ('methodical', 'Методическая помощь'),
+    ]
+    
+    # Общие типы
+    COMMON_REQUEST_TYPES = [
+        ('other', 'Другое'),
+        ('suggestion', 'Предложение'),
+        ('complaint', 'Жалоба'),
+    ]
+    
+    student = models.ForeignKey('StudentProfile', on_delete=models.CASCADE, related_name='requests', null=True, blank=True, verbose_name='Студент')
+    teacher = models.ForeignKey('TeacherProfile', on_delete=models.CASCADE, related_name='requests', null=True, blank=True, verbose_name='Преподаватель')
+    request_type = models.CharField(max_length=30, verbose_name='Тип заявки')
     title = models.CharField(max_length=200, verbose_name='Заголовок')
     description = models.TextField(verbose_name='Описание')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', verbose_name='Статус')
@@ -402,7 +419,11 @@ class Request(models.Model):
         ordering = ['-created_at']
     
     def __str__(self):
-        return f"{self.get_request_type_display()} - {self.student.user.get_full_name()}"
+        if self.student:
+            return f"{self.get_request_type_display()} - {self.student.user.get_full_name()}"
+        elif self.teacher:
+            return f"{self.get_request_type_display()} - {self.teacher.user.get_full_name()}"
+        return f"{self.get_request_type_display()}"
     
     def get_status_color(self):
         colors = {
@@ -414,6 +435,22 @@ class Request(models.Model):
         }
         return colors.get(self.status, 'secondary')
     
+    @classmethod
+    def get_request_types_for_user(cls, user):
+        """Получить доступные типы заявок для пользователя"""
+        if user.role == 'teacher':
+            return cls.TEACHER_REQUEST_TYPES + cls.COMMON_REQUEST_TYPES
+        elif user.role == 'student' or user.role == 'headman':
+            return cls.STUDENT_REQUEST_TYPES + cls.COMMON_REQUEST_TYPES
+        else:
+            return cls.STUDENT_REQUEST_TYPES + cls.TEACHER_REQUEST_TYPES + cls.COMMON_REQUEST_TYPES
+        
+    def get_request_type_display(self):
+        """Возвращает читаемое название типа заявки"""
+        all_types = self.STUDENT_REQUEST_TYPES + self.TEACHER_REQUEST_TYPES + self.COMMON_REQUEST_TYPES
+        types_dict = dict(all_types)
+        return types_dict.get(self.request_type, self.request_type)
+        
 # ========== МОДЕЛИ ДЛЯ УВЕДОМЛЕНИЙ ==========
 
 class Notification(models.Model):
@@ -586,3 +623,36 @@ class Announcement(models.Model):
     
     def __str__(self):
         return f"{self.title} - {self.group.name}"
+    
+# ========== МОДЕЛИ ДЛЯ ЧАТА ==========
+
+class ChatRoom(models.Model):
+    """Чат-комната между пользователями"""
+    participants = models.ManyToManyField('User', related_name='chat_rooms')
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_message_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-last_message_at']
+    
+    def __str__(self):
+        return f"Chat #{self.id}: {', '.join([u.username for u in self.participants.all()])}"
+    
+    def get_other_participant(self, user):
+        """Получить другого участника чата"""
+        return self.participants.exclude(id=user.id).first()
+
+
+class ChatMessage(models.Model):
+    """Сообщение в чате"""
+    room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name='messages')
+    sender = models.ForeignKey('User', on_delete=models.CASCADE, related_name='sent_messages')
+    content = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['created_at']
+    
+    def __str__(self):
+        return f"{self.sender.username}: {self.content[:50]}"

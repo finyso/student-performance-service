@@ -1,15 +1,40 @@
 from apps.accounts.models import Notification, User
+from django.conf import settings
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
-def create_notification(user, notification_type, title, message, link=None):
+def send_realtime_notification(user_id, notification):
+    """Отправить уведомление в реальном времени через WebSocket"""
+    try:
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f'notifications_{user_id}',
+            {
+                'type': 'send_notification',
+                'notification_id': notification.id,
+                'title': notification.title,
+                'message': notification.message,
+                'link': notification.link or '',
+                'created_at': notification.created_at.strftime('%H:%M')
+            }
+        )
+    except Exception as e:
+        print(f"WebSocket error: {e}")
+
+def create_notification(user, notification_type, title, message, link=None, send_email=False):
     """Создать уведомление для пользователя"""
-    Notification.objects.create(
+    notification = Notification.objects.create(
         user=user,
         notification_type=notification_type,
         title=title,
         message=message,
         link=link
     )
-
+    
+    # Отправка через WebSocket
+    send_realtime_notification(user.id, notification)
+    
+    return notification
 
 def notify_students_in_group(group, notification_type, title, message, link=None):
     """Отправить уведомление всем студентам группы"""
@@ -54,5 +79,16 @@ def notify_about_request_status(request_obj):
     message = f"Ваша заявка \"{request_obj.title}\" получила статус: {request_obj.get_status_display()}"
     if request_obj.admin_comment:
         message += f"\n\nКомментарий: {request_obj.admin_comment}"
-    link = f"/my-requests/{request_obj.id}/"
-    create_notification(request_obj.student.user, 'request', title, message, link)
+    
+    # Определяем кому отправлять уведомление
+    if request_obj.student:
+        user = request_obj.student.user
+        link = f"/my-requests/{request_obj.id}/"
+    elif request_obj.teacher:
+        user = request_obj.teacher.user
+        link = f"/my-requests/{request_obj.id}/"
+    else:
+        user = request_obj.created_by
+        link = f"/my-requests/{request_obj.id}/"
+    
+    create_notification(user, 'request', title, message, link)
