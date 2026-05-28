@@ -814,6 +814,9 @@
                     <a href="{% url 'chat_list' %}">
                         <i class="bi bi-chat-dots-fill"></i>
                         <span>Чаты</span>
+                        {% if chat_unread_count > 0 %}
+                            <span class="badge-notification">{{ chat_unread_count }}</span>
+                        {% endif %}
                     </a>
                 </li>
             {% endif %}

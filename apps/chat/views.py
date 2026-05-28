@@ -3,6 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q
 from apps.accounts.models import ChatRoom, ChatMessage, User, StudentProfile, TeacherProfile, Group
+from django.http import JsonResponse
+import json
 
 @login_required
 def chat_list(request):
@@ -168,3 +170,92 @@ def can_chat(user1, user2):
         return True
     
     return False
+
+@login_required
+def api_get_messages(request, room_id):
+    """API для получения сообщений комнаты"""
+    try:
+        room = ChatRoom.objects.get(id=room_id)
+        if request.user not in room.participants.all():
+            return JsonResponse({'error': 'Access denied'}, status=403)
+        
+        messages = room.messages.all().select_related('sender')[:50]
+        data = {
+            'messages': [
+                {
+                    'id': msg.id,
+                    'content': msg.content,
+                    'sender_name': msg.sender.get_full_name() or msg.sender.username,
+                    'sender_username': msg.sender.username,
+                    'time': msg.created_at.strftime('%H:%M'),
+                    'date': msg.created_at.strftime('%d.%m.%Y')
+                }
+                for msg in messages
+            ]
+        }
+        return JsonResponse(data)
+    except ChatRoom.DoesNotExist:
+        return JsonResponse({'error': 'Room not found'}, status=404)
+
+
+@login_required
+def api_send_message(request):
+    """API для отправки сообщения"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        room_id = data.get('room_id')
+        message = data.get('message', '').strip()
+        
+        if not message:
+            return JsonResponse({'error': 'Message is empty'}, status=400)
+        
+        room = ChatRoom.objects.get(id=room_id)
+        if request.user not in room.participants.all():
+            return JsonResponse({'error': 'Access denied'}, status=403)
+        
+        chat_message = ChatMessage.objects.create(
+            room=room,
+            sender=request.user,
+            content=message
+        )
+        
+        room.last_message_at = chat_message.created_at
+        room.save(update_fields=['last_message_at'])
+        
+        return JsonResponse({
+            'status': 'ok',
+            'message_id': chat_message.id
+        })
+    except ChatRoom.DoesNotExist:
+        return JsonResponse({'error': 'Room not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+    
+@login_required
+def chat_list(request):
+    """Список чатов пользователя"""
+    chat_rooms = ChatRoom.objects.filter(participants=request.user).order_by('-last_message_at')
+    
+    # Получаем последнее сообщение для каждого чата
+    chats_data = []
+    total_unread = 0
+    for room in chat_rooms:
+        last_message = room.messages.last()
+        other_user = room.get_other_participant(request.user)
+        unread_count = room.messages.filter(is_read=False).exclude(sender=request.user).count()
+        total_unread += unread_count
+        chats_data.append({
+            'room': room,
+            'other_user': other_user,
+            'last_message': last_message,
+            'unread_count': unread_count
+        })
+    
+    context = {
+        'chats': chats_data,
+        'total_unread': total_unread,
+    }
+    return render(request, 'chat/chat_list.html', context)

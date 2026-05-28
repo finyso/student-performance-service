@@ -2,11 +2,16 @@
 
 {% block title %}Чат с {{ other_user.get_full_name }}{% endblock %}
 
-{% block content %}
-<input type="hidden" id="room-id" value="{{ room.id }}">
-<input type="hidden" id="current-username" value="{{ user.username }}">
-<input type="hidden" id="current-fullname" value="{{ user.get_full_name }}">
+{% block extra_css %}
+<style>
+    /* Скрываем всплывающие уведомления в чате */
+    .toast {
+        display: none !important;
+    }
+</style>
+{% endblock %}
 
+{% block content %}
 <div class="row">
     <div class="col-12">
         <h1 class="mb-4">
@@ -55,55 +60,73 @@
 </div>
 
 <script>
-    const roomId = document.getElementById('room-id').value;
-    const currentUsername = document.getElementById('current-username').value;
-    const currentFullname = document.getElementById('current-fullname').value;
+    const roomId = '{{ room.id }}';
+    const csrfToken = '{{ csrf_token }}';
     
-    if (roomId && roomId !== 'None') {
-        const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-        const chatSocket = new WebSocket(protocol + window.location.host + '/ws/chat/' + roomId + '/');
+    // Загрузка сообщений каждые 2 секунды
+    function loadMessages() {
+        fetch('/chat/api/messages/' + roomId + '/')
+            .then(response => response.json())
+            .then(data => {
+                if (data.messages) {
+                    updateMessages(data.messages);
+                }
+            })
+            .catch(error => console.log('Error loading messages:', error));
+    }
+    
+    function updateMessages(messages) {
+        const messagesDiv = document.getElementById('chat-messages');
+        const currentMessages = messagesDiv.querySelectorAll('.message-item').length;
         
-        chatSocket.onopen = function(e) {
-            console.log('WebSocket connected');
-        };
-        
-        chatSocket.onmessage = function(e) {
-            const data = JSON.parse(e.data);
-            if (data.type === 'message') {
-                const messagesDiv = document.getElementById('chat-messages');
-                const isMe = (data.sender === currentUsername);
+        if (messages.length !== currentMessages) {
+            messagesDiv.innerHTML = '';
+            messages.forEach(msg => {
+                const isMe = (msg.sender_username === '{{ user.username }}');
                 const messageHtml = `
-                    <div class="mb-3 ${isMe ? 'text-end' : ''}">
+                    <div class="mb-3 ${isMe ? 'text-end' : ''} message-item">
                         <div class="d-inline-block p-2 rounded ${isMe ? 'bg-primary text-white' : 'bg-light'}" style="max-width: 70%;">
                             <small class="d-block ${isMe ? 'text-white-50' : 'text-muted'}">
-                                ${escapeHtml(data.sender_fullname)} • ${escapeHtml(data.timestamp)}
+                                ${escapeHtml(msg.sender_name)} • ${msg.time}
                             </small>
-                            ${escapeHtml(data.message).replace(/\n/g, '<br>')}
+                            ${escapeHtml(msg.content).replace(/\n/g, '<br>')}
                         </div>
                     </div>
                 `;
                 messagesDiv.insertAdjacentHTML('beforeend', messageHtml);
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            }
-        };
+            });
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+    }
+    
+    function sendMessage(event) {
+        event.preventDefault();
+        const input = document.getElementById('chat-input');
+        const message = input.value.trim();
         
-        chatSocket.onclose = function(e) {
-            console.log('WebSocket disconnected');
-        };
+        if (!message) return;
         
-        document.getElementById('chat-form').onsubmit = function(e) {
-            e.preventDefault();
-            const input = document.getElementById('chat-input');
-            const message = input.value.trim();
-            if (message) {
-                chatSocket.send(JSON.stringify({
-                    'message': message
-                }));
+        fetch('/chat/api/send/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                room_id: roomId,
+                message: message
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'ok') {
                 input.value = '';
+                loadMessages(); // сразу загружаем обновления
+            } else {
+                alert(data.error || 'Ошибка отправки');
             }
-        };
-    } else {
-        console.log('Invalid room ID');
+        })
+        .catch(error => console.log('Error:', error));
     }
     
     function escapeHtml(text) {
@@ -112,6 +135,13 @@
         return div.innerHTML;
     }
     
+    document.getElementById('chat-form').onsubmit = sendMessage;
+    
+    // Загружаем сообщения сразу и каждые 2 секунды
+    loadMessages();
+    setInterval(loadMessages, 2000);
+    
+    // Прокрутка вниз при загрузке
     const messagesDiv = document.getElementById('chat-messages');
     if (messagesDiv) {
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
