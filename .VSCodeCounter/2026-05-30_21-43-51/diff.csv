@@ -1,0 +1,11 @@
+"filename", "language", "Python", "HTML", "Log", "comment", "blank", "total"
+"d:\453502\student_performance_service\apps\chat\urls.py", "Python", 1, 0, 0, 0, 0, 1
+"d:\453502\student_performance_service\apps\chat\views.py", "Python", 31, 0, 0, 3, 5, 39
+"d:\453502\student_performance_service\apps\notifications\urls.py", "Python", 1, 0, 0, 2, 1, 4
+"d:\453502\student_performance_service\apps\notifications\views.py", "Python", 28, 0, 0, 3, 4, 35
+"d:\453502\student_performance_service\logs\django.log", "Log", 0, 0, 5239, 0, 0, 5239
+"d:\453502\student_performance_service\templates\base.html", "HTML", 0, 141, 0, 0, 22, 163
+"d:\453502\student_performance_service\templates\chat\chat_room.html", "HTML", 0, 54, 0, 0, 8, 62
+"d:\453502\student_performance_service\tests\test_models.py", "Python", 60, 0, 0, 4, 13, 77
+"d:\453502\student_performance_service\tests\test_views.py", "Python", 59, 0, 0, 1, 11, 71
+"Total", "-", 180, 195, 5239, 13, 64, 5691

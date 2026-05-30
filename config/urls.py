@@ -10,7 +10,7 @@ urlpatterns = [
     path('', include('apps.grades.urls')),
     path('', include('apps.schedule.urls')),
     path('', include('apps.requests_app.urls')),
-    path('', include('apps.notifications.urls')),
+    path('', include('apps.notifications.urls')),  # ЭТО ДОЛЖНО БЫТЬ!
     path('', include('apps.assignments.urls')),
     path('', include('apps.analytics.urls')),
     path('', include('apps.chat.urls')),

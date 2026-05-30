@@ -4,8 +4,8 @@
 
 {% block extra_css %}
 <style>
-    /* Скрываем всплывающие уведомления в чате */
-    .toast {
+    /* Скрываем только системные сообщения Django (alert), но не тосты */
+    .alert {
         display: none !important;
     }
 </style>
@@ -32,21 +32,10 @@
                 </div>
             </div>
             <div class="card-body" id="chat-messages" style="height: 400px; overflow-y: auto;">
-                {% for message in messages %}
-                    <div class="mb-3 {% if message.sender == user %}text-end{% endif %}">
-                        <div class="d-inline-block p-2 rounded {% if message.sender == user %}bg-primary text-white{% else %}bg-light{% endif %}" style="max-width: 70%;">
-                            <small class="d-block {% if message.sender == user %}text-white-50{% else %}text-muted{% endif %}">
-                                {{ message.sender.get_full_name }} • {{ message.created_at|date:"H:i" }}
-                            </small>
-                            {{ message.content|linebreaksbr }}
-                        </div>
-                    </div>
-                {% empty %}
-                    <div class="text-center text-muted py-5">
-                        <i class="bi bi-chat-dots fs-1"></i>
-                        <p>Нет сообщений. Напишите что-нибудь!</p>
-                    </div>
-                {% endfor %}
+                <div class="text-center text-muted py-5" id="loading-messages">
+                    <div class="spinner-border text-primary"></div>
+                    <p class="mt-2">Загрузка сообщений...</p>
+                </div>
             </div>
             <div class="card-footer">
                 <form id="chat-form" class="d-flex gap-2">
@@ -61,44 +50,81 @@
 
 <script>
     const roomId = '{{ room.id }}';
+    const currentUsername = '{{ user.username }}';
     const csrfToken = '{{ csrf_token }}';
+    let lastMessageId = 0;
+    let isFirstLoad = true;
     
-    // Загрузка сообщений каждые 2 секунды
+    // Запрашиваем разрешение на браузерные уведомления
+    if (Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+
+    function scrollToBottom() {
+        const messagesDiv = document.getElementById('chat-messages');
+        if (messagesDiv) {
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Показываем всплывашку ТОЛЬКО для новых сообщений
+    function showNewMessageToast(sender, message) {
+        if (typeof showToast === 'function') {
+            showToast(`💬 Новое сообщение от ${sender}`, message);
+        } else {
+            console.log('New message from:', sender, message);
+        }
+    }
+
+    function displayNewMessage(msg, isNew = false) {
+        const messagesDiv = document.getElementById('chat-messages');
+        const loadingDiv = document.getElementById('loading-messages');
+        if (loadingDiv) loadingDiv.remove();
+        
+        const isMe = (msg.sender_username === currentUsername);
+        const messageHtml = `
+            <div class="mb-3 ${isMe ? 'text-end' : ''} message-item">
+                <div class="d-inline-block p-2 rounded ${isMe ? 'bg-primary text-white' : 'bg-light'}" style="max-width: 70%;">
+                    <small class="d-block ${isMe ? 'text-white-50' : 'text-muted'}">
+                        ${escapeHtml(msg.sender_name)} • ${msg.time}
+                    </small>
+                    ${escapeHtml(msg.content).replace(/\n/g, '<br>')}
+                </div>
+            </div>
+        `;
+        messagesDiv.insertAdjacentHTML('beforeend', messageHtml);
+        scrollToBottom();
+        
+        // Показываем всплывашку ТОЛЬКО для НОВЫХ сообщений от других пользователей
+        if (isNew && !isMe) {
+            console.log('New message detected, showing toast');
+            //showNewMessageToast(msg.sender_name, msg.content);
+        }
+    }
+
     function loadMessages() {
-        fetch('/chat/api/messages/' + roomId + '/')
+        fetch('/chat/api/messages/' + roomId + '/?last_id=' + lastMessageId)
             .then(response => response.json())
             .then(data => {
-                if (data.messages) {
-                    updateMessages(data.messages);
+                if (data.messages && data.messages.length > 0) {
+                    data.messages.forEach(msg => {
+                        if (msg.id > lastMessageId) {
+                            // Это НОВОЕ сообщение - показываем всплывашку
+                            displayNewMessage(msg, true);
+                            lastMessageId = Math.max(lastMessageId, msg.id);
+                        }
+                    });
                 }
             })
             .catch(error => console.log('Error loading messages:', error));
     }
-    
-    function updateMessages(messages) {
-        const messagesDiv = document.getElementById('chat-messages');
-        const currentMessages = messagesDiv.querySelectorAll('.message-item').length;
-        
-        if (messages.length !== currentMessages) {
-            messagesDiv.innerHTML = '';
-            messages.forEach(msg => {
-                const isMe = (msg.sender_username === '{{ user.username }}');
-                const messageHtml = `
-                    <div class="mb-3 ${isMe ? 'text-end' : ''} message-item">
-                        <div class="d-inline-block p-2 rounded ${isMe ? 'bg-primary text-white' : 'bg-light'}" style="max-width: 70%;">
-                            <small class="d-block ${isMe ? 'text-white-50' : 'text-muted'}">
-                                ${escapeHtml(msg.sender_name)} • ${msg.time}
-                            </small>
-                            ${escapeHtml(msg.content).replace(/\n/g, '<br>')}
-                        </div>
-                    </div>
-                `;
-                messagesDiv.insertAdjacentHTML('beforeend', messageHtml);
-            });
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }
-    }
-    
+
     function sendMessage(event) {
         event.preventDefault();
         const input = document.getElementById('chat-input');
@@ -121,30 +147,66 @@
         .then(data => {
             if (data.status === 'ok') {
                 input.value = '';
-                loadMessages(); // сразу загружаем обновления
+                // После отправки загружаем новые сообщения
+                setTimeout(loadMessages, 100);
             } else {
                 alert(data.error || 'Ошибка отправки');
             }
         })
-        .catch(error => console.log('Error:', error));
+        .catch(error => {
+            console.log('Error:', error);
+            alert('Ошибка отправки сообщения');
+        });
+    }
+
+    // Загружаем все существующие сообщения (БЕЗ всплывашек)
+    fetch('/chat/api/messages/' + roomId + '/')
+        .then(response => response.json())
+        .then(data => {
+            const messagesDiv = document.getElementById('chat-messages');
+            messagesDiv.innerHTML = '';
+            if (data.messages && data.messages.length > 0) {
+                data.messages.forEach(msg => {
+                    // Старые сообщения - НЕ показываем всплывашки
+                    displayNewMessage(msg, false);
+                    if (msg.id > lastMessageId) {
+                        lastMessageId = Math.max(lastMessageId, msg.id);
+                    }
+                });
+            } else {
+                messagesDiv.innerHTML = '<div class="text-center text-muted py-5"><i class="bi bi-chat-dots fs-1"></i><p>Нет сообщений. Напишите что-нибудь!</p></div>';
+            }
+            scrollToBottom();
+            isFirstLoad = false;
+        });
+
+    // Polling для новых сообщений (каждые 2 секунды) - ТОЛЬКО когда страница активна
+    let pollingInterval = null;
+    
+    function startPolling() {
+        if (pollingInterval) clearInterval(pollingInterval);
+        pollingInterval = setInterval(loadMessages, 2000);
     }
     
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+    function stopPolling() {
+        if (pollingInterval) {
+            clearInterval(pollingInterval);
+            pollingInterval = null;
+        }
     }
     
-    document.getElementById('chat-form').onsubmit = sendMessage;
+    // Запускаем polling только когда страница видима
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            stopPolling();
+        } else {
+            startPolling();
+        }
+    });
     
-    // Загружаем сообщения сразу и каждые 2 секунды
-    loadMessages();
-    setInterval(loadMessages, 2000);
-    
-    // Прокрутка вниз при загрузке
-    const messagesDiv = document.getElementById('chat-messages');
-    if (messagesDiv) {
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    }
+    startPolling();
+
+    // Привязываем обработчик к форме
+    document.getElementById('chat-form').addEventListener('submit', sendMessage);
 </script>
 {% endblock %}

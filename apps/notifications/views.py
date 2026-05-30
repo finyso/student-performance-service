@@ -71,3 +71,38 @@ def get_unread_count(request):
         count = Notification.objects.filter(user=request.user, is_read=False).count()
         return JsonResponse({'count': count})
     return JsonResponse({'count': 0})
+
+@login_required
+def api_get_new_notifications(request):
+    """API для получения новых уведомлений (для polling)"""
+    last_id = request.GET.get('last_id', 0)
+    try:
+        last_id = int(last_id)
+    except ValueError:
+        last_id = 0
+    
+    # Получаем новые уведомления (ID больше last_id)
+    new_notifications = Notification.objects.filter(
+        user=request.user,
+        id__gt=last_id
+    ).order_by('-id')[:10]
+    
+    # Получаем количество непрочитанных
+    unread_count = Notification.objects.filter(user=request.user, is_read=False).count()
+    
+    data = {
+        'notifications': [
+            {
+                'id': n.id,
+                'title': n.title,
+                'message': n.message,
+                'link': n.link or '',
+                'type': n.notification_type,
+                'created_at': n.created_at.strftime('%H:%M'),
+                'is_read': n.is_read
+            }
+            for n in new_notifications
+        ],
+        'unread_count': unread_count
+    }
+    return JsonResponse(data)

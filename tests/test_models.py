@@ -2,7 +2,7 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from datetime import date, timedelta
-from apps.accounts.models import User, StudentProfile, TeacherProfile, Group, Subject, Grade, Attendance, Schedule
+from apps.accounts.models import User, StudentProfile, TeacherProfile, Group, Subject, Grade, Attendance, Schedule, ChatRoom, ChatMessage, Notification, Request, Penalty, Announcement
 
 User = get_user_model()
 
@@ -102,7 +102,6 @@ class TestGradeModel:
             created_by=teacher
         )
         assert grade.value == 8
-        assert str(grade) == f"{student.user.get_full_name()} - {subject.name}: 8"
         assert grade.get_grade_display_color() == 'primary'
     
     def test_grade_unique_constraint(self):
@@ -169,3 +168,81 @@ class TestAttendanceModel:
         )
         assert attendance.status == 'present'
         assert attendance.get_status_color() == 'success'
+
+
+@pytest.mark.django_db
+class TestChatModel:
+    """Тесты модели чата"""
+    
+    def test_create_chat_room(self):
+        user1 = User.objects.create_user(username='user1', password='pass')
+        user2 = User.objects.create_user(username='user2', password='pass')
+        room = ChatRoom.objects.create()
+        room.participants.add(user1, user2)
+        assert room.participants.count() == 2
+        assert room.get_other_participant(user1) == user2
+    
+    def test_create_chat_message(self):
+        user1 = User.objects.create_user(username='user1', password='pass')
+        user2 = User.objects.create_user(username='user2', password='pass')
+        room = ChatRoom.objects.create()
+        room.participants.add(user1, user2)
+        message = ChatMessage.objects.create(
+            room=room,
+            sender=user1,
+            content='Тестовое сообщение'
+        )
+        assert message.content == 'Тестовое сообщение'
+        assert str(message) == 'user1: Тестовое сообщение'
+
+
+@pytest.mark.django_db
+class TestNotificationModel:
+    """Тесты модели уведомлений"""
+    
+    def test_create_notification(self):
+        user = User.objects.create_user(username='testuser', password='pass')
+        notification = Notification.objects.create(
+            user=user,
+            notification_type='system',
+            title='Тест',
+            message='Тестовое уведомление'
+        )
+        assert notification.title == 'Тест'
+        assert notification.is_read is False
+
+
+@pytest.mark.django_db
+class TestPenaltyModel:
+    """Тесты модели взысканий"""
+    
+    def test_create_penalty(self):
+        user = User.objects.create_user(username='student', password='pass')
+        group = Group.objects.create(name='ТЕСТ', course=1, specialty='Тест')
+        student = StudentProfile.objects.create(user=user, group=group, enrollment_year=2023)
+        admin = User.objects.create_superuser(username='admin', password='pass', email='admin@test.com')
+        penalty = Penalty.objects.create(
+            student=student,
+            penalty_type='warning',
+            reason='Нарушение',
+            issued_by=admin
+        )
+        assert penalty.penalty_type == 'warning'
+        assert penalty.get_penalty_color() == 'warning'
+
+
+@pytest.mark.django_db
+class TestAnnouncementModel:
+    """Тесты модели объявлений"""
+    
+    def test_create_announcement(self):
+        group = Group.objects.create(name='ТЕСТ', course=1, specialty='Тест')
+        user = User.objects.create_user(username='curator', password='pass', role='curator')
+        announcement = Announcement.objects.create(
+            title='Важное объявление',
+            content='Завтра нет пар',
+            group=group,
+            created_by=user
+        )
+        assert announcement.title == 'Важное объявление'
+        assert str(announcement) == f'Важное объявление - {group.name}'

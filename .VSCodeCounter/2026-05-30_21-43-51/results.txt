@@ -1,0 +1,205 @@
+Date : 2026-05-30 21:43:51
+Directory : d:\453502\student_performance_service
+Total : 134 files,  22717 codes, 299 comments, 1215 blanks, all 24231 lines
+
+Languages
++------------------+------------+------------+------------+------------+------------+
+| language         | files      | code       | comment    | blank      | total      |
++------------------+------------+------------+------------+------------+------------+
+| Log              |          1 |     13,357 |          0 |          9 |     13,366 |
+| Python           |         75 |      4,651 |        287 |        766 |      5,704 |
+| HTML             |         52 |      4,555 |          6 |        414 |      4,975 |
+| YAML             |          1 |         70 |          0 |          5 |         75 |
+| Markdown         |          1 |         40 |          0 |         14 |         54 |
+| Ignore           |          1 |         18 |          0 |          0 |         18 |
+| Docker           |          1 |         12 |          6 |          7 |         25 |
+| pip requirements |          1 |         10 |          0 |          0 |         10 |
+| Ini              |          1 |          4 |          0 |          0 |          4 |
++------------------+------------+------------+------------+------------+------------+
+
+Directories
++----------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                         | files      | code       | comment    | blank      | total      |
++----------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                            |        134 |     22,717 |        299 |      1,215 |     24,231 |
+| . (Files)                                                                                    |          2 |         17 |          1 |          2 |         20 |
+| apps                                                                                         |         66 |      4,045 |        246 |        653 |      4,944 |
+| apps (Files)                                                                                 |          1 |          0 |          0 |          1 |          1 |
+| apps\accounts                                                                                |         12 |      2,376 |         96 |        262 |      2,734 |
+| apps\accounts (Files)                                                                        |          7 |      1,057 |         95 |        249 |      1,401 |
+| apps\accounts\management                                                                     |          3 |         12 |          0 |          5 |         17 |
+| apps\accounts\management (Files)                                                             |          1 |          0 |          0 |          1 |          1 |
+| apps\accounts\management\commands                                                            |          2 |         12 |          0 |          4 |         16 |
+| apps\accounts\migrations                                                                     |          2 |      1,307 |          1 |          8 |      1,316 |
+| apps\analytics                                                                               |          5 |        312 |         22 |         80 |        414 |
+| apps\assignments                                                                             |          5 |        301 |         25 |         68 |        394 |
+| apps\attendance                                                                              |          4 |          9 |          0 |          4 |         13 |
+| apps\chat                                                                                    |          7 |        331 |         30 |         61 |        422 |
+| apps\core                                                                                    |          7 |         55 |          8 |         19 |         82 |
+| apps\core (Files)                                                                            |          5 |         48 |          7 |         16 |         71 |
+| apps\core\templatetags                                                                       |          2 |          7 |          1 |          3 |         11 |
+| apps\grades                                                                                  |          7 |        165 |         19 |         39 |        223 |
+| apps\grades (Files)                                                                          |          5 |        160 |         18 |         36 |        214 |
+| apps\grades\templatetags                                                                     |          2 |          5 |          1 |          3 |          9 |
+| apps\notifications                                                                           |          8 |        188 |         21 |         52 |        261 |
+| apps\requests_app                                                                            |          5 |        133 |          9 |         32 |        174 |
+| apps\schedule                                                                                |          5 |        175 |         16 |         35 |        226 |
+| config                                                                                       |          5 |        208 |         26 |         38 |        272 |
+| docker                                                                                       |          3 |        100 |          6 |         12 |        118 |
+| docs                                                                                         |          2 |         50 |          0 |         14 |         64 |
+| logs                                                                                         |          1 |     13,357 |          0 |          9 |     13,366 |
+| templates                                                                                    |         52 |      4,555 |          6 |        414 |      4,975 |
+| templates (Files)                                                                            |          1 |        984 |          6 |        134 |      1,124 |
+| templates\accounts                                                                           |         17 |      1,131 |          0 |         84 |      1,215 |
+| templates\analytics                                                                          |          2 |        242 |          0 |         15 |        257 |
+| templates\assignments                                                                        |          7 |        504 |          0 |         42 |        546 |
+| templates\chat                                                                               |          3 |        273 |          0 |         28 |        301 |
+| templates\core                                                                               |          6 |        260 |          0 |         25 |        285 |
+| templates\grades                                                                             |          4 |        354 |          0 |         22 |        376 |
+| templates\notifications                                                                      |          2 |        112 |          0 |          9 |        121 |
+| templates\registration                                                                       |          1 |         36 |          0 |          7 |         43 |
+| templates\requests                                                                           |          5 |        325 |          0 |         29 |        354 |
+| templates\schedule                                                                           |          4 |        334 |          0 |         19 |        353 |
+| tests                                                                                        |          3 |        385 |         14 |         73 |        472 |
++----------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++----------------------------------------------------------------------------------------------+------------------+------------+------------+------------+------------+
+| filename                                                                                     | language         | code       | comment    | blank      | total      |
++----------------------------------------------------------------------------------------------+------------------+------------+------------+------------+------------+
+| d:\453502\student_performance_service\apps\__init__.py                                       | Python           |          0 |          0 |          1 |          1 |
+| d:\453502\student_performance_service\apps\accounts\__init__.py                              | Python           |          0 |          0 |          1 |          1 |
+| d:\453502\student_performance_service\apps\accounts\admin.py                                 | Python           |         75 |          0 |         12 |         87 |
+| d:\453502\student_performance_service\apps\accounts\api_urls.py                              | Python           |          2 |          0 |          1 |          3 |
+| d:\453502\student_performance_service\apps\accounts\apps.py                                  | Python           |          5 |          0 |          1 |          6 |
+| d:\453502\student_performance_service\apps\accounts\management\__init__.py                   | Python           |          0 |          0 |          1 |          1 |
+| d:\453502\student_performance_service\apps\accounts\management\commands\__init__.py          | Python           |          0 |          0 |          1 |          1 |
+| d:\453502\student_performance_service\apps\accounts\management\commands\calculate_ratings.py | Python           |         12 |          0 |          3 |         15 |
+| d:\453502\student_performance_service\apps\accounts\migrations\0001_initial.py               | Python           |      1,307 |          1 |          7 |      1,315 |
+| d:\453502\student_performance_service\apps\accounts\migrations\__init__.py                   | Python           |          0 |          0 |          1 |          1 |
+| d:\453502\student_performance_service\apps\accounts\models.py                                | Python           |        483 |         55 |        120 |        658 |
+| d:\453502\student_performance_service\apps\accounts\urls.py                                  | Python           |         24 |          5 |          5 |         34 |
+| d:\453502\student_performance_service\apps\accounts\views.py                                 | Python           |        468 |         35 |        109 |        612 |
+| d:\453502\student_performance_service\apps\analytics\__init__.py                             | Python           |          0 |          0 |          1 |          1 |
+| d:\453502\student_performance_service\apps\analytics\api_urls.py                             | Python           |          2 |          0 |          1 |          3 |
+| d:\453502\student_performance_service\apps\analytics\apps.py                                 | Python           |          5 |          0 |          1 |          6 |
+| d:\453502\student_performance_service\apps\analytics\urls.py                                 | Python           |          7 |          0 |          1 |          8 |
+| d:\453502\student_performance_service\apps\analytics\views.py                                | Python           |        298 |         22 |         76 |        396 |
+| d:\453502\student_performance_service\apps\assignments\__init__.py                           | Python           |          0 |          0 |          1 |          1 |
+| d:\453502\student_performance_service\apps\assignments\api_urls.py                           | Python           |          2 |          0 |          1 |          3 |
+| d:\453502\student_performance_service\apps\assignments\apps.py                               | Python           |          5 |          0 |          1 |          6 |
+| d:\453502\student_performance_service\apps\assignments\urls.py                               | Python           |         12 |          0 |          1 |         13 |
+| d:\453502\student_performance_service\apps\assignments\views.py                              | Python           |        282 |         25 |         64 |        371 |
+| d:\453502\student_performance_service\apps\attendance\__init__.py                            | Python           |          0 |          0 |          1 |          1 |
+| d:\453502\student_performance_service\apps\attendance\api_urls.py                            | Python           |          2 |          0 |          1 |          3 |
+| d:\453502\student_performance_service\apps\attendance\apps.py                                | Python           |          5 |          0 |          1 |          6 |
+| d:\453502\student_performance_service\apps\attendance\urls.py                                | Python           |          2 |          0 |          1 |          3 |
+| d:\453502\student_performance_service\apps\chat\__init__.py                                  | Python           |          0 |          0 |          1 |          1 |
+| d:\453502\student_performance_service\apps\chat\apps.py                                      | Python           |          5 |          0 |          1 |          6 |
+| d:\453502\student_performance_service\apps\chat\consumers.py                                 | Python           |         70 |          4 |         12 |         86 |
+| d:\453502\student_performance_service\apps\chat\context_processors.py                        | Python           |          9 |          2 |          1 |         12 |
+| d:\453502\student_performance_service\apps\chat\routing.py                                   | Python           |          5 |          0 |          1 |          6 |
+| d:\453502\student_performance_service\apps\chat\urls.py                                      | Python           |         10 |          0 |          1 |         11 |
+| d:\453502\student_performance_service\apps\chat\views.py                                     | Python           |        232 |         24 |         44 |        300 |
+| d:\453502\student_performance_service\apps\core\__init__.py                                  | Python           |          0 |          0 |          1 |          1 |
+| d:\453502\student_performance_service\apps\core\apps.py                                      | Python           |          5 |          0 |          1 |          6 |
+| d:\453502\student_performance_service\apps\core\context_processors.py                        | Python           |          6 |          1 |          1 |          8 |
+| d:\453502\student_performance_service\apps\core\templatetags\__init__.py                     | Python           |          0 |          0 |          1 |          1 |
+| d:\453502\student_performance_service\apps\core\templatetags\custom_filters.py               | Python           |          7 |          1 |          2 |         10 |
+| d:\453502\student_performance_service\apps\core\urls.py                                      | Python           |         10 |          0 |          1 |         11 |
+| d:\453502\student_performance_service\apps\core\views.py                                     | Python           |         27 |          6 |         12 |         45 |
+| d:\453502\student_performance_service\apps\grades\__init__.py                                | Python           |          0 |          0 |          1 |          1 |
+| d:\453502\student_performance_service\apps\grades\api_urls.py                                | Python           |          2 |          0 |          1 |          3 |
+| d:\453502\student_performance_service\apps\grades\apps.py                                    | Python           |          5 |          0 |          1 |          6 |
+| d:\453502\student_performance_service\apps\grades\templatetags\__init__.py                   | Python           |          0 |          0 |          1 |          1 |
+| d:\453502\student_performance_service\apps\grades\templatetags\grade_filters.py              | Python           |          5 |          1 |          2 |          8 |
+| d:\453502\student_performance_service\apps\grades\urls.py                                    | Python           |          9 |          0 |          1 |         10 |
+| d:\453502\student_performance_service\apps\grades\views.py                                   | Python           |        144 |         18 |         32 |        194 |
+| d:\453502\student_performance_service\apps\notifications\__init__.py                         | Python           |          0 |          0 |          1 |          1 |
+| d:\453502\student_performance_service\apps\notifications\api_urls.py                         | Python           |          2 |          0 |          1 |          3 |
+| d:\453502\student_performance_service\apps\notifications\apps.py                             | Python           |          5 |          0 |          1 |          6 |
+| d:\453502\student_performance_service\apps\notifications\consumers.py                        | Python           |         19 |          0 |          8 |         27 |
+| d:\453502\student_performance_service\apps\notifications\routing.py                          | Python           |          5 |          0 |          2 |          7 |
+| d:\453502\student_performance_service\apps\notifications\urls.py                             | Python           |         11 |          2 |          2 |         15 |
+| d:\453502\student_performance_service\apps\notifications\utils.py                            | Python           |         69 |          9 |         16 |         94 |
+| d:\453502\student_performance_service\apps\notifications\views.py                            | Python           |         77 |         10 |         21 |        108 |
+| d:\453502\student_performance_service\apps\requests_app\__init__.py                          | Python           |          0 |          0 |          1 |          1 |
+| d:\453502\student_performance_service\apps\requests_app\api_urls.py                          | Python           |          2 |          0 |          1 |          3 |
+| d:\453502\student_performance_service\apps\requests_app\apps.py                              | Python           |          5 |          0 |          1 |          6 |
+| d:\453502\student_performance_service\apps\requests_app\urls.py                              | Python           |          9 |          0 |          1 |         10 |
+| d:\453502\student_performance_service\apps\requests_app\views.py                             | Python           |        117 |          9 |         28 |        154 |
+| d:\453502\student_performance_service\apps\schedule\__init__.py                              | Python           |          0 |          0 |          1 |          1 |
+| d:\453502\student_performance_service\apps\schedule\api_urls.py                              | Python           |          2 |          0 |          1 |          3 |
+| d:\453502\student_performance_service\apps\schedule\apps.py                                  | Python           |          5 |          0 |          1 |          6 |
+| d:\453502\student_performance_service\apps\schedule\urls.py                                  | Python           |          9 |          0 |          1 |         10 |
+| d:\453502\student_performance_service\apps\schedule\views.py                                 | Python           |        159 |         16 |         31 |        206 |
+| d:\453502\student_performance_service\config\__init__.py                                     | Python           |          0 |          0 |          1 |          1 |
+| d:\453502\student_performance_service\config\asgi.py                                         | Python           |         17 |          1 |          3 |         21 |
+| d:\453502\student_performance_service\config\settings.py                                     | Python           |        164 |         24 |         29 |        217 |
+| d:\453502\student_performance_service\config\urls.py                                         | Python           |         19 |          0 |          2 |         21 |
+| d:\453502\student_performance_service\config\wsgi.py                                         | Python           |          8 |          1 |          3 |         12 |
+| d:\453502\student_performance_service\docker\.dockerignore                                   | Ignore           |         18 |          0 |          0 |         18 |
+| d:\453502\student_performance_service\docker\Dockerfile                                      | Docker           |         12 |          6 |          7 |         25 |
+| d:\453502\student_performance_service\docker\docker-compose.yml                              | YAML             |         70 |          0 |          5 |         75 |
+| d:\453502\student_performance_service\docs\README.md                                         | Markdown         |         40 |          0 |         14 |         54 |
+| d:\453502\student_performance_service\docs\requirements.txt                                  | pip requirements |         10 |          0 |          0 |         10 |
+| d:\453502\student_performance_service\logs\django.log                                        | Log              |     13,357 |          0 |          9 |     13,366 |
+| d:\453502\student_performance_service\manage.py                                              | Python           |         13 |          1 |          2 |         16 |
+| d:\453502\student_performance_service\pytest.ini                                             | Ini              |          4 |          0 |          0 |          4 |
+| d:\453502\student_performance_service\templates\accounts\admin_all_grades.html               | HTML             |         83 |          0 |          4 |         87 |
+| d:\453502\student_performance_service\templates\accounts\admin_all_schedule.html             | HTML             |         87 |          0 |          5 |         92 |
+| d:\453502\student_performance_service\templates\accounts\admin_announcements.html            | HTML             |         64 |          0 |          4 |         68 |
+| d:\453502\student_performance_service\templates\accounts\admin_attendance.html               | HTML             |        100 |          0 |          6 |        106 |
+| d:\453502\student_performance_service\templates\accounts\admin_news.html                     | HTML             |         67 |          0 |          4 |         71 |
+| d:\453502\student_performance_service\templates\accounts\admin_penalties.html                | HTML             |         86 |          0 |          8 |         94 |
+| d:\453502\student_performance_service\templates\accounts\change_password.html                | HTML             |         20 |          0 |          2 |         22 |
+| d:\453502\student_performance_service\templates\accounts\curator_announcements.html          | HTML             |         63 |          0 |          8 |         71 |
+| d:\453502\student_performance_service\templates\accounts\curator_group_students.html         | HTML             |         70 |          0 |          4 |         74 |
+| d:\453502\student_performance_service\templates\accounts\group_list.html                     | HTML             |         75 |          0 |          4 |         79 |
+| d:\453502\student_performance_service\templates\accounts\headman_attendance.html             | HTML             |         82 |          0 |          6 |         88 |
+| d:\453502\student_performance_service\templates\accounts\penalties_list.html                 | HTML             |         50 |          0 |          3 |         53 |
+| d:\453502\student_performance_service\templates\accounts\profile.html                        | HTML             |         54 |          0 |          2 |         56 |
+| d:\453502\student_performance_service\templates\accounts\profile_edit.html                   | HTML             |         60 |          0 |          9 |         69 |
+| d:\453502\student_performance_service\templates\accounts\rating_list.html                    | HTML             |        101 |          0 |          6 |        107 |
+| d:\453502\student_performance_service\templates\accounts\register.html                       | HTML             |         35 |          0 |          6 |         41 |
+| d:\453502\student_performance_service\templates\accounts\student_announcements.html          | HTML             |         34 |          0 |          3 |         37 |
+| d:\453502\student_performance_service\templates\analytics\student_analytics.html             | HTML             |        120 |          0 |          7 |        127 |
+| d:\453502\student_performance_service\templates\analytics\teacher_analytics.html             | HTML             |        122 |          0 |          8 |        130 |
+| d:\453502\student_performance_service\templates\assignments\assignment_detail.html           | HTML             |         83 |          0 |          9 |         92 |
+| d:\453502\student_performance_service\templates\assignments\assignment_form.html             | HTML             |         80 |          0 |          8 |         88 |
+| d:\453502\student_performance_service\templates\assignments\grade_form.html                  | HTML             |         59 |          0 |          9 |         68 |
+| d:\453502\student_performance_service\templates\assignments\student_list.html                | HTML             |         83 |          0 |          4 |         87 |
+| d:\453502\student_performance_service\templates\assignments\submissions_list.html            | HTML             |         72 |          0 |          3 |         75 |
+| d:\453502\student_performance_service\templates\assignments\submit_form.html                 | HTML             |         41 |          0 |          5 |         46 |
+| d:\453502\student_performance_service\templates\assignments\teacher_list.html                | HTML             |         86 |          0 |          4 |         90 |
+| d:\453502\student_performance_service\templates\base.html                                    | HTML             |        984 |          6 |        134 |      1,124 |
+| d:\453502\student_performance_service\templates\chat\available_users.html                    | HTML             |         15 |          0 |          0 |         15 |
+| d:\453502\student_performance_service\templates\chat\chat_list.html                          | HTML             |         69 |          0 |          5 |         74 |
+| d:\453502\student_performance_service\templates\chat\chat_room.html                          | HTML             |        189 |          0 |         23 |        212 |
+| d:\453502\student_performance_service\templates\core\about.html                              | HTML             |         30 |          0 |          5 |         35 |
+| d:\453502\student_performance_service\templates\core\contacts.html                           | HTML             |         42 |          0 |          3 |         45 |
+| d:\453502\student_performance_service\templates\core\home.html                               | HTML             |         87 |          0 |          4 |         91 |
+| d:\453502\student_performance_service\templates\core\news_detail.html                        | HTML             |         33 |          0 |          3 |         36 |
+| d:\453502\student_performance_service\templates\core\news_list.html                          | HTML             |         45 |          0 |          3 |         48 |
+| d:\453502\student_performance_service\templates\core\privacy_policy.html                     | HTML             |         23 |          0 |          7 |         30 |
+| d:\453502\student_performance_service\templates\grades\add_grade.html                        | HTML             |         56 |          0 |          8 |         64 |
+| d:\453502\student_performance_service\templates\grades\gradebook.html                        | HTML             |         75 |          0 |          4 |         79 |
+| d:\453502\student_performance_service\templates\grades\student_statistics.html               | HTML             |        109 |          0 |          5 |        114 |
+| d:\453502\student_performance_service\templates\grades\teacher_gradebook.html                | HTML             |        114 |          0 |          5 |        119 |
+| d:\453502\student_performance_service\templates\notifications\detail.html                    | HTML             |         40 |          0 |          5 |         45 |
+| d:\453502\student_performance_service\templates\notifications\list.html                      | HTML             |         72 |          0 |          4 |         76 |
+| d:\453502\student_performance_service\templates\registration\login.html                      | HTML             |         36 |          0 |          7 |         43 |
+| d:\453502\student_performance_service\templates\requests\admin_requests.html                 | HTML             |        116 |          0 |          5 |        121 |
+| d:\453502\student_performance_service\templates\requests\process_request.html                | HTML             |         45 |          0 |          7 |         52 |
+| d:\453502\student_performance_service\templates\requests\request_create.html                 | HTML             |         39 |          0 |          6 |         45 |
+| d:\453502\student_performance_service\templates\requests\request_detail.html                 | HTML             |         46 |          0 |          7 |         53 |
+| d:\453502\student_performance_service\templates\requests\requests_list.html                  | HTML             |         79 |          0 |          4 |         83 |
+| d:\453502\student_performance_service\templates\schedule\schedule.html                       | HTML             |         88 |          0 |          5 |         93 |
+| d:\453502\student_performance_service\templates\schedule\student_attendance.html             | HTML             |         94 |          0 |          4 |         98 |
+| d:\453502\student_performance_service\templates\schedule\teacher_attendance.html             | HTML             |        107 |          0 |          7 |        114 |
+| d:\453502\student_performance_service\templates\schedule\teacher_attendance_select.html      | HTML             |         45 |          0 |          3 |         48 |
+| d:\453502\student_performance_service\tests\__init__.py                                      | Python           |          0 |          0 |          1 |          1 |
+| d:\453502\student_performance_service\tests\test_models.py                                   | Python           |        210 |          8 |         30 |        248 |
+| d:\453502\student_performance_service\tests\test_views.py                                    | Python           |        175 |          6 |         42 |        223 |
+| Total                                                                                        |                  |     22,717 |        299 |      1,215 |     24,231 |
++----------------------------------------------------------------------------------------------+------------------+------------+------------+------------+------------+

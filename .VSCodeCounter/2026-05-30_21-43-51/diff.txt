@@ -1,0 +1,43 @@
+Date : 2026-05-30 21:43:51
+Directory : d:\453502\student_performance_service
+Total : 9 files,  5614 codes, 13 comments, 64 blanks, all 5691 lines
+
+Languages
++----------+------------+------------+------------+------------+------------+
+| language | files      | code       | comment    | blank      | total      |
++----------+------------+------------+------------+------------+------------+
+| Log      |          1 |      5,239 |          0 |          0 |      5,239 |
+| HTML     |          2 |        195 |          0 |         30 |        225 |
+| Python   |          6 |        180 |         13 |         34 |        227 |
++----------+------------+------------+------------+------------+------------+
+
+Directories
++---------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                | files      | code       | comment    | blank      | total      |
++---------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                   |          9 |      5,614 |         13 |         64 |      5,691 |
+| apps                                                                |          4 |         61 |          8 |         10 |         79 |
+| apps\chat                                                           |          2 |         32 |          3 |          5 |         40 |
+| apps\notifications                                                  |          2 |         29 |          5 |          5 |         39 |
+| logs                                                                |          1 |      5,239 |          0 |          0 |      5,239 |
+| templates                                                           |          2 |        195 |          0 |         30 |        225 |
+| templates (Files)                                                   |          1 |        141 |          0 |         22 |        163 |
+| templates\chat                                                      |          1 |         54 |          0 |          8 |         62 |
+| tests                                                               |          2 |        119 |          5 |         24 |        148 |
++---------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++---------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| filename                                                            | language | code       | comment    | blank      | total      |
++---------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| d:\453502\student_performance_service\apps\chat\urls.py             | Python   |          1 |          0 |          0 |          1 |
+| d:\453502\student_performance_service\apps\chat\views.py            | Python   |         31 |          3 |          5 |         39 |
+| d:\453502\student_performance_service\apps\notifications\urls.py    | Python   |          1 |          2 |          1 |          4 |
+| d:\453502\student_performance_service\apps\notifications\views.py   | Python   |         28 |          3 |          4 |         35 |
+| d:\453502\student_performance_service\logs\django.log               | Log      |      5,239 |          0 |          0 |      5,239 |
+| d:\453502\student_performance_service\templates\base.html           | HTML     |        141 |          0 |         22 |        163 |
+| d:\453502\student_performance_service\templates\chat\chat_room.html | HTML     |         54 |          0 |          8 |         62 |
+| d:\453502\student_performance_service\tests\test_models.py          | Python   |         60 |          4 |         13 |         77 |
+| d:\453502\student_performance_service\tests\test_views.py           | Python   |         59 |          1 |         11 |         71 |
+| Total                                                               |          |      5,614 |         13 |         64 |      5,691 |
++---------------------------------------------------------------------+----------+------------+------------+------------+------------+

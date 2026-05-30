@@ -525,6 +525,75 @@
         .hover-card i {
             transition: all 0.3s ease;
             display: inline-block;
+        }  
+        
+        /* Dark mode for chat pages */
+        body.dark-mode .card-header {
+            background-color: #1e2a3a !important;
+            color: #e0e0e0 !important;
+        }
+
+        body.dark-mode .card-header a,
+        body.dark-mode .card-header span,
+        body.dark-mode .card-header .btn-light {
+            color: #e0e0e0 !important;
+        }
+
+        body.dark-mode h1,
+        body.dark-mode h1 small,
+        body.dark-mode h1 .text-muted {
+            color: #e0e0e0 !important;
+        }
+
+        body.dark-mode .bg-light {
+            background-color: #1e2a3a !important;
+            color: #e0e0e0 !important;
+        }
+
+        body.dark-mode .list-group-item {
+            background-color: #1e2a3a;
+            color: #e0e0e0;
+            border-color: #2c3e50;
+        }
+
+        body.dark-mode .list-group-item-action:hover {
+            background-color: #2c3e50;
+            color: #fff;
+        }
+
+        body.dark-mode .text-muted {
+            color: #95a5a6 !important;
+        }
+
+        body.dark-mode .btn-light {
+            background-color: #2c3e50;
+            color: #e0e0e0;
+            border-color: #3d4e62;
+        }
+
+        body.dark-mode .btn-light:hover {
+            background-color: #3d4e62;
+            color: #fff;
+        }
+
+        body.dark-mode .card-footer {
+            background-color: #1e2a3a;
+            border-top-color: #2c3e50;
+        }
+
+        body.dark-mode .form-control {
+            background-color: #1e2a3a;
+            color: #e0e0e0;
+            border-color: #2c3e50;
+        }
+
+        body.dark-mode .form-control:focus {
+            background-color: #1e2a3a;
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .form-control::placeholder {
+            color: #95a5a6;
         }
     </style>
     
@@ -826,13 +895,15 @@
     <!-- Main content -->
     <div class="main-content">
         <div class="content-wrapper">
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                        <i class="bi bi-info-circle"></i> {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% endfor %}
+            {% if '/chat/' not in request.path %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            <i class="bi bi-info-circle"></i> {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
             {% endif %}
             
             {% block content %}{% endblock %}
@@ -926,34 +997,126 @@
         }
         
         function showToast(title, message) {
-            const toastHtml = `
-                <div class="toast align-items-center text-white bg-primary border-0 position-fixed bottom-0 end-0 m-3" role="alert" style="z-index: 1100;">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            <strong>${escapeHtml(title)}</strong><br>
-                            ${escapeHtml(message)}
-                        </div>
-                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-                    </div>
+    // Не показываем дубликаты
+    if (document.querySelector('.toast')) return;
+    
+    const toastHtml = `
+        <div class="toast align-items-center text-white bg-primary border-0 position-fixed bottom-0 end-0 m-3" role="alert" style="z-index: 1100; z-index: 10000;">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <strong>${escapeHtml(title)}</strong><br>
+                    ${escapeHtml(message.substring(0, 100))}
                 </div>
-            `;
-            const container = document.createElement('div');
-            container.innerHTML = toastHtml;
-            document.body.appendChild(container);
-            const toast = new bootstrap.Toast(container.querySelector('.toast'));
-            toast.show();
-            setTimeout(() => container.remove(), 5000);
-        }
-        
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    `;
+    const container = document.createElement('div');
+    container.innerHTML = toastHtml;
+    document.body.appendChild(container);
+    const toastElement = container.querySelector('.toast');
+    const toast = new bootstrap.Toast(toastElement, { autohide: true, delay: 5000 });
+    toast.show();
+    setTimeout(() => container.remove(), 5000);
+}
+
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
-        
-        // Проверка через сессию - запускаем всегда, а сервер сам проверит
-        // WebSocket сам обработает ошибку, если пользователь не авторизован
-        //connectNotificationSocket();
+
+    // Polling для уведомлений (без WebSocket)
+    let lastNotificationId = 0;
+    
+    // Получаем максимальный ID при загрузке
+    fetch('/api/notifications/new/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.notifications && data.notifications.length > 0) {
+                lastNotificationId = Math.max(...data.notifications.map(n => n.id));
+            }
+            // Запускаем polling
+            setInterval(checkNewNotifications, 5000);
+        })
+        .catch(error => console.log('Initial fetch error:', error));
+    
+    function checkNewNotifications() {
+        fetch('/api/notifications/new/?last_id=' + lastNotificationId)
+            .then(response => response.json())
+            .then(data => {
+                // Обновляем счётчик в меню
+                const badge = document.querySelector('.badge-notification');
+                if (badge) {
+                    if (data.unread_count > 0) {
+                        badge.innerText = data.unread_count;
+                        badge.style.display = 'inline-block';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+                
+                // Показываем новые уведомления
+                if (data.notifications && data.notifications.length > 0) {
+                    // Сортируем по возрастанию ID (старые сначала)
+                    const sorted = [...data.notifications].sort((a, b) => a.id - b.id);
+                    sorted.forEach(notif => {
+                        if (notif.id > lastNotificationId) {
+                            showToast(notif.title, notif.message);
+                            lastNotificationId = Math.max(lastNotificationId, notif.id);
+                        }
+                    });
+                }
+            })
+            .catch(error => console.log('Polling error:', error));
+    }
+    
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // ========== Глобальный polling для новых сообщений чата ==========
+let lastGlobalMessageId = 0;
+let globalPollingInterval = null;
+
+// Функция для проверки новых сообщений во всех чатах пользователя
+function checkNewChatMessages() {
+    fetch('/chat/api/global-new-messages/?last_id=' + lastGlobalMessageId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.messages && data.messages.length > 0) {
+                data.messages.forEach(msg => {
+                    if (msg.id > lastGlobalMessageId) {
+                        // Показываем всплывашку о новом сообщении
+                        showToast(`💬 Новое сообщение от ${msg.sender_name}`, msg.content_preview);
+                        lastGlobalMessageId = Math.max(lastGlobalMessageId, msg.id);
+                        
+                        // Обновляем счётчик в меню
+                        const chatBadge = document.querySelector('.sidebar .nav-links li a[href*="chat_list"] ~ .badge-notification');
+                        if (chatBadge) {
+                            const currentCount = parseInt(chatBadge.innerText) || 0;
+                            chatBadge.innerText = currentCount + 1;
+                            chatBadge.style.display = 'inline-block';
+                        }
+                    }
+                });
+            }
+        })
+        .catch(error => console.log('Global chat polling error:', error));
+}
+
+// Запускаем глобальный polling для чатов (на всех страницах)
+fetch('/chat/api/global-new-messages/')
+    .then(response => response.json())
+    .then(data => {
+        if (data.messages && data.messages.length > 0) {
+            lastGlobalMessageId = Math.max(...data.messages.map(m => m.id));
+        }
+        globalPollingInterval = setInterval(checkNewChatMessages, 3000);
+    })
+    .catch(error => console.log('Init global chat error:', error));
     </script>
     
     {% block extra_js %}{% endblock %}

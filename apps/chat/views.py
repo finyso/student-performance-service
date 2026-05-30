@@ -173,13 +173,19 @@ def can_chat(user1, user2):
 
 @login_required
 def api_get_messages(request, room_id):
-    """API для получения сообщений комнаты"""
+    """API для получения новых сообщений комнаты"""
     try:
         room = ChatRoom.objects.get(id=room_id)
         if request.user not in room.participants.all():
             return JsonResponse({'error': 'Access denied'}, status=403)
         
-        messages = room.messages.all().select_related('sender')[:50]
+        last_id = request.GET.get('last_id', 0)
+        
+        if last_id:
+            messages = room.messages.filter(id__gt=last_id).select_related('sender')[:20]
+        else:
+            messages = room.messages.all().select_related('sender')[:50]
+        
         data = {
             'messages': [
                 {
@@ -196,7 +202,6 @@ def api_get_messages(request, room_id):
         return JsonResponse(data)
     except ChatRoom.DoesNotExist:
         return JsonResponse({'error': 'Room not found'}, status=404)
-
 
 @login_required
 def api_send_message(request):
@@ -259,3 +264,37 @@ def chat_list(request):
         'total_unread': total_unread,
     }
     return render(request, 'chat/chat_list.html', context)
+
+@login_required
+def api_get_global_new_messages(request):
+    """API для получения новых сообщений во всех чатах пользователя"""
+    try:
+        last_id = request.GET.get('last_id', 0)
+        
+        # Получаем все комнаты пользователя
+        rooms = ChatRoom.objects.filter(participants=request.user)
+        
+        # Получаем новые сообщения из всех комнат, где отправитель НЕ текущий пользователь
+        messages = ChatMessage.objects.filter(
+            room__in=rooms,
+            id__gt=last_id
+        ).exclude(sender=request.user).select_related('sender', 'room').order_by('-id')[:20]
+        
+        data = {
+            'messages': [
+                {
+                    'id': msg.id,
+                    'content': msg.content,
+                    'content_preview': msg.content[:100] + ('...' if len(msg.content) > 100 else ''),
+                    'sender_name': msg.sender.get_full_name() or msg.sender.username,
+                    'sender_username': msg.sender.username,
+                    'room_id': msg.room.id,
+                    'room_url': f'/chat/{msg.room.get_other_participant(request.user).id}/',
+                    'time': msg.created_at.strftime('%H:%M'),
+                }
+                for msg in messages
+            ]
+        }
+        return JsonResponse(data)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

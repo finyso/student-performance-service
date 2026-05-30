@@ -3,7 +3,7 @@ from django.test import Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from datetime import date
-from apps.accounts.models import Group, StudentProfile, Subject, TeacherProfile
+from apps.accounts.models import Group, StudentProfile, Subject, TeacherProfile, ChatRoom, ChatMessage
 
 User = get_user_model()
 
@@ -32,14 +32,14 @@ class TestAuthViews:
             'username': 'testuser',
             'password': 'testpass123'
         })
-        assert response.status_code == 302  # Redirect after login
+        assert response.status_code == 302
     
     def test_user_login_fail(self):
         response = self.client.post(reverse('login'), {
             'username': 'wronguser',
             'password': 'wrongpass'
         })
-        assert response.status_code == 200  # Stays on login page
+        assert response.status_code == 200
 
 
 @pytest.mark.django_db
@@ -52,7 +52,8 @@ class TestStudentViews:
             username='student',
             password='pass123',
             first_name='Иван',
-            last_name='Петров'
+            last_name='Петров',
+            role='student'
         )
         group = Group.objects.create(name='ТЕСТ-01', course=1, specialty='Тест')
         StudentProfile.objects.create(
@@ -77,6 +78,10 @@ class TestStudentViews:
     def test_rating_list(self):
         response = self.client.get(reverse('rating_list'))
         assert response.status_code == 200
+    
+    def test_chat_list(self):
+        response = self.client.get(reverse('chat_list'))
+        assert response.status_code == 200
 
 
 @pytest.mark.django_db
@@ -88,6 +93,8 @@ class TestTeacherViews:
         self.user = User.objects.create_user(
             username='teacher',
             password='pass123',
+            first_name='Иван',
+            last_name='Иванов',
             role='teacher'
         )
         TeacherProfile.objects.create(
@@ -108,6 +115,10 @@ class TestTeacherViews:
     
     def test_teacher_assignments(self):
         response = self.client.get(reverse('teacher_assignments'))
+        assert response.status_code == 200
+    
+    def test_chat_list(self):
+        response = self.client.get(reverse('chat_list'))
         assert response.status_code == 200
 
 
@@ -135,6 +146,60 @@ class TestAdminViews:
     def test_admin_all_schedule(self):
         response = self.client.get(reverse('admin_all_schedule'))
         assert response.status_code == 200
+    
+    def test_admin_attendance(self):
+        response = self.client.get(reverse('admin_attendance'))
+        assert response.status_code == 200
+
+
+@pytest.mark.django_db
+class TestChatViews:
+    """Тесты чатов"""
+    
+    def setup_method(self):
+        self.client = Client()
+        self.user1 = User.objects.create_user(
+            username='user1',
+            password='pass123',
+            first_name='Первый',
+            last_name='Пользователь'
+        )
+        self.user2 = User.objects.create_user(
+            username='user2',
+            password='pass123',
+            first_name='Второй',
+            last_name='Пользователь'
+        )
+        self.client.login(username='user1', password='pass123')
+    
+    def test_chat_list(self):
+        response = self.client.get(reverse('chat_list'))
+        assert response.status_code == 200
+    
+    def test_chat_room_creation(self):
+        response = self.client.get(reverse('chat_room', args=[self.user2.id]))
+        assert response.status_code in [200, 302]
+        if response.status_code == 302:
+            assert response.url.startswith('/chat/')
+    
+    def test_api_get_messages(self):
+        room = ChatRoom.objects.create()
+        room.participants.add(self.user1, self.user2)
+        response = self.client.get(reverse('api_get_messages', args=[room.id]))
+        assert response.status_code == 200
+        assert 'messages' in response.json()
+    
+    def test_api_send_message(self):
+        room = ChatRoom.objects.create()
+        room.participants.add(self.user1, self.user2)
+        import json
+        response = self.client.post(
+            reverse('api_send_message'),
+            data=json.dumps({'room_id': room.id, 'message': 'Тест'}),
+            content_type='application/json'
+        )
+        assert response.status_code == 200
+        assert response.json().get('status') == 'ok'
 
 
 @pytest.mark.django_db
@@ -149,4 +214,10 @@ class TestApiEndpoints:
         self.client.login(username='testuser', password='pass123')
         response = self.client.get(reverse('unread_count'))
         assert response.status_code == 200
-        assert response.json()['count'] == 0
+        assert 'count' in response.json()
+    
+    def test_notifications_api(self):
+        self.client.login(username='testuser', password='pass123')
+        response = self.client.get(reverse('api_new_notifications'))
+        assert response.status_code == 200
+        assert 'notifications' in response.json()

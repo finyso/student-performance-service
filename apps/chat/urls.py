@@ -7,4 +7,5 @@ urlpatterns = [
     path('chat/users/available/', views.get_available_users, name='available_users'),
     path('chat/api/messages/<int:room_id>/', views.api_get_messages, name='api_get_messages'),
     path('chat/api/send/', views.api_send_message, name='api_send_message'),
+    path('chat/api/global-new-messages/', views.api_get_global_new_messages, name='api_global_new_messages'),
 ]
